@@ -1,30 +1,15 @@
-enum EgestionCode {
-    Amplify,
-    Uncover,
-}
+mod protocol;
+mod strategy;
 
-enum Primer {
-    Turn,
-    Reflect,
-    Ground,
-}
+use crate::strategy::Strategy;
 
 enum Value {
     Zero,
-    NonZero(Option<Primer>, Number),
+    NonZero(Option<protocol::Primer>, Number),
 }
 
 struct Number {
     strategy: Box<dyn Strategy>,
-}
-
-trait Strategy {
-    fn egest(&self) -> StrategyOutput;
-}
-
-enum StrategyOutput {
-    Egestion(Option<EgestionCode>),
-    Exhaustion(Box<dyn Strategy>),
 }
 
 #[cfg(test)]
