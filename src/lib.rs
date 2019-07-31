@@ -12,10 +12,36 @@ struct Number {
     strategy: Box<dyn Strategy>,
 }
 
+fn one() -> Value {
+    Value::NonZero(None, Number{strategy: Box::new(strategy::one::new())})
+}
+
+impl Number {
+    fn egest(&mut self) -> Option<protocol::Reduction> {
+        match self.strategy.egest() {
+            Ok(message) => message,
+            Err(new_strategy) => {
+                self.strategy = new_strategy;
+                self.egest()
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+
+    use crate::one;
+    use crate::Value;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn test_one() {
+        if let Value::NonZero(None, mut number) = one() {
+            assert_eq!(number.egest(), None);
+        }
+        else {
+            panic!("unexpected initialization");
+        }
     }
+
 }
