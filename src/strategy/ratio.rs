@@ -2,15 +2,25 @@ use crate::protocol;
 use crate::strategy::Strategy;
 
 pub struct Ratio {
-    num: u64,
-    den: u64,
+    num: usize,
+    den: usize,
 }
 
 impl Ratio {
 
-    fn new(positive: bool, num: u64, den:u64) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
+    fn new(num: isize, den:isize) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
+        Ratio::new_u(
+            (num >= 0 && den >= 0) || (num < 0 && den < 0),
+            if num >= 0 { num } else { -num } as usize,
+            if den >= 0 { den } else { -den } as usize)
+    }
+
+    fn new_u(positive: bool, num: usize, den:usize) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
         if num == 0 && den == 0 {
             panic!("undefined ratio");
+        }
+        else if num == 0 {
+            (Some(protocol::Fixed::Zero), None, None)
         }
         else if den == 0 {
             if positive {
@@ -19,9 +29,6 @@ impl Ratio {
             else {
                 (Some(protocol::Fixed::NegInf), None, None)
             }
-        }
-        else if num == 0 {
-            (Some(protocol::Fixed::Zero), None, None)
         }
         else if !positive {
             if num > den {
