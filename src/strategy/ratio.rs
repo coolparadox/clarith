@@ -9,11 +9,19 @@ pub struct Ratio {
 
 impl Ratio {
 
-    fn new(is_positive: bool, num: u64, den:u64) -> Value {
-        if num == 0 && den == 0 {
-            panic!("undefined ratio")
+    fn new(positive: bool, num: u64, den:u64) -> Value {
+        // if num == 0 && den == 0 {
+            // panic!("undefined ratio");
+        // }
+        if den == 0 {
+            // if positive {
+                // Value::PosInf
+            // }
+            Value::NegInf
         }
-        Value::Zero
+        else {
+            Value::Zero
+        }
     }
 
 }
