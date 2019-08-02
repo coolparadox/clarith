@@ -1,4 +1,5 @@
 pub mod one;
+pub mod ratio;
 
 use crate::protocol;
 
