@@ -10,7 +10,7 @@ pub fn new() -> One {
 
 impl Strategy for One {
 
-    fn egest(&self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
+    fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
         Ok(None)
     }
 

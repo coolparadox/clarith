@@ -9,3 +9,9 @@ pub enum Primer {
     Reflect,
     Ground,
 }
+
+pub enum Fixed {
+    Zero,
+    NegInf,
+    PosInf,
+}

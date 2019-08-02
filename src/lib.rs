@@ -4,9 +4,7 @@ mod strategy;
 use crate::strategy::Strategy;
 
 pub enum Value {
-    Zero,
-    NegInf,
-    PosInf,
+    Special(protocol::Fixed),
     Other(Option<protocol::Primer>, Number),
 }
 

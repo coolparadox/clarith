@@ -4,5 +4,5 @@ pub mod ratio;
 use crate::protocol;
 
 pub trait Strategy {
-    fn egest(&self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>>;
+    fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>>;
 }
