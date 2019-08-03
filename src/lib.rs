@@ -1,31 +1,16 @@
 pub mod protocol;
 mod strategy;
+pub mod number;
 
-use crate::strategy::Strategy;
+// use crate::strategy::Strategy;
 
 pub enum Value {
     Special(protocol::Fixed),
-    Other(Option<protocol::Primer>, Number),
-}
-
-pub struct Number {
-    strategy: Box<dyn Strategy>,
+    Other(Option<protocol::Primer>, number::Number),
 }
 
 pub fn one() -> Value {
-    Value::Other(None, Number{strategy: Box::new(strategy::one::new())})
-}
-
-impl Number {
-    pub fn egest(&mut self) -> Option<protocol::Reduction> {
-        match self.strategy.egest() {
-            Ok(message) => message,
-            Err(new_strategy) => {
-                self.strategy = new_strategy;
-                self.egest()
-            }
-        }
-    }
+    Value::Other(None, number::Number{strategy: Box::new(strategy::one::new())})
 }
 
 #[cfg(test)]
