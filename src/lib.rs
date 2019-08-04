@@ -1,10 +1,28 @@
 pub mod protocol;
-pub mod number;
 mod strategy;
+
+// use crate::protocol;
+use crate::strategy::Strategy;
+
+pub struct Number {
+    strategy: Box<dyn Strategy>,
+}
+
+impl Number {
+    pub fn egest(&mut self) -> Option<protocol::Reduction> {
+        match self.strategy.egest() {
+            Ok(message) => message,
+            Err(new_strategy) => {
+                self.strategy = new_strategy;
+                self.egest()
+            }
+        }
+    }
+}
 
 pub enum Value {
     Special(protocol::Fixed),
-    Other(Option<protocol::Primer>, number::Number),
+    Other(Option<protocol::Primer>, Number),
 }
 
 pub fn ratio(num: isize, den:isize) -> Value {
@@ -19,11 +37,11 @@ pub fn ratio_u(positive: bool, num: usize, den: usize) -> Value {
     if let Some(fixed) = special {
         return Value::Special(fixed);
     }
-    Value::Other(primer, number::Number{strategy: Box::new(ratio.unwrap())})
+    Value::Other(primer, Number{strategy: Box::new(ratio.unwrap())})
 }
 
 pub fn one() -> Value {
-    Value::Other(None, number::Number{strategy: Box::new(strategy::one::new())})
+    Value::Other(None, Number{strategy: Box::new(strategy::one::new())})
 }
 
 #[cfg(test)]
