@@ -6,46 +6,35 @@ pub struct Ratio {
     den: usize,
 }
 
-impl Ratio {
-
-    fn new(num: isize, den:isize) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
-        Ratio::new_u(
-            (num >= 0 && den >= 0) || (num < 0 && den < 0),
-            if num >= 0 { num } else { -num } as usize,
-            if den >= 0 { den } else { -den } as usize)
+pub fn new(positive: bool, num: usize, den:usize) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
+    if num == 0 && den == 0 {
+        panic!("undefined ratio");
     }
-
-    fn new_u(positive: bool, num: usize, den:usize) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
-        if num == 0 && den == 0 {
-            panic!("undefined ratio");
-        }
-        else if num == 0 {
-            (Some(protocol::Fixed::Zero), None, None)
-        }
-        else if den == 0 {
-            if positive {
-                (Some(protocol::Fixed::PosInf), None, None)
-            }
-            else {
-                (Some(protocol::Fixed::NegInf), None, None)
-            }
-        }
-        else if !positive {
-            if num > den {
-                (None, Some(protocol::Primer::Ground), Some(Ratio {num: den, den: num}))
-            }
-            else {
-                (None, Some(protocol::Primer::Reflect), Some(Ratio {num: num, den: den}))
-            }
-        }
-        else if num > den {
-            (None, Some(protocol::Primer::Turn), Some(Ratio {num: den, den: num}))
+    else if num == 0 {
+        (Some(protocol::Fixed::Zero), None, None)
+    }
+    else if den == 0 {
+        if positive {
+            (Some(protocol::Fixed::PosInf), None, None)
         }
         else {
-            (None, None, Some(Ratio {num: num, den: den}))
+            (Some(protocol::Fixed::NegInf), None, None)
         }
     }
-
+    else if !positive {
+        if num > den {
+            (None, Some(protocol::Primer::Ground), Some(Ratio {num: den, den: num}))
+        }
+        else {
+            (None, Some(protocol::Primer::Reflect), Some(Ratio {num: num, den: den}))
+        }
+    }
+    else if num > den {
+        (None, Some(protocol::Primer::Turn), Some(Ratio {num: den, den: num}))
+    }
+    else {
+        (None, None, Some(Ratio {num: num, den: den}))
+    }
 }
 
 impl Strategy for Ratio {
