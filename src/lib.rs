@@ -1,7 +1,6 @@
 pub mod protocol;
 mod strategy;
 
-// use crate::protocol;
 use crate::strategy::Strategy;
 
 pub struct Number {

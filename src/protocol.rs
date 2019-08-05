@@ -4,14 +4,18 @@ pub enum Reduction {
     Uncover,
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Primer {
     Turn,
     Reflect,
     Ground,
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Fixed {
-    Zero,
     NegInf,
+    NegOne,
+    Zero,
+    One,
     PosInf,
 }
