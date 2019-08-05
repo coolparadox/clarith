@@ -39,24 +39,3 @@ pub fn ratio_u(positive: bool, num: usize, den: usize) -> Value {
     Value::Other(primer, Number{strategy: Box::new(ratio.unwrap())})
 }
 
-pub fn one() -> Value {
-    Value::Other(None, Number{strategy: Box::new(strategy::one::new())})
-}
-
-#[cfg(test)]
-mod tests {
-
-    use crate::one;
-    use crate::Value;
-
-    #[test]
-    fn test_one() {
-        if let Value::Other(None, mut number) = one() {
-            assert_eq!(number.egest(), None);
-        }
-        else {
-            panic!("unexpected initialization");
-        }
-    }
-
-}
