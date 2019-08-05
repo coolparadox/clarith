@@ -28,7 +28,7 @@ impl Number {
 
 /// A rational value with unbounded range and precision.
 pub enum Value {
-    Special(protocol::Fixed),
+    Special(protocol::Special),
     Other(Option<protocol::Primer>, Number),
 }
 

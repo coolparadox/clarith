@@ -20,7 +20,7 @@ pub enum Primer {
 
 /// Values that cannot be uniquely represented by the combination of a Primer and a Number.
 #[derive(Debug, PartialEq)]
-pub enum Fixed {
+pub enum Special {
 	/// Negative infinity
     NegInf,
 	/// Minus one

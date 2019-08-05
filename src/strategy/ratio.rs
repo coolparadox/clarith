@@ -14,7 +14,7 @@ mod tests {
 
     #[test]
     fn supports_negative_infinity() {
-        if let (Some(protocol::Fixed::NegInf), None, None) = new(false, 1, 0) {
+        if let (Some(protocol::Special::NegInf), None, None) = new(false, 1, 0) {
             return;
         }
         panic!();
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn supports_negative_one() {
-        if let (Some(protocol::Fixed::NegOne), None, None) = new(false, 1, 1) {
+        if let (Some(protocol::Special::NegOne), None, None) = new(false, 1, 1) {
             return;
         }
         panic!();
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn supports_zero() {
-        if let (Some(protocol::Fixed::Zero), None, None) = new(true, 0, 1) {
+        if let (Some(protocol::Special::Zero), None, None) = new(true, 0, 1) {
             return;
         }
         panic!();
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn supports_one() {
-        if let (Some(protocol::Fixed::One), None, None) = new(true, 1, 1) {
+        if let (Some(protocol::Special::One), None, None) = new(true, 1, 1) {
             return;
         }
         panic!();
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn supports_infinity() {
-        if let (Some(protocol::Fixed::PosInf), None, None) = new(true, 1, 0) {
+        if let (Some(protocol::Special::PosInf), None, None) = new(true, 1, 0) {
             return;
         }
         panic!();
@@ -147,25 +147,25 @@ pub struct Ratio {
     den: usize,
 }
 
-pub fn new(positive: bool, num: usize, den:usize) -> (Option<protocol::Fixed>, Option<protocol::Primer>, Option<Ratio>) {
+pub fn new(positive: bool, num: usize, den:usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
     if num == 0 && den == 0 {
         panic!("undefined ratio");
     }
     if num == 0 {
-        return (Some(protocol::Fixed::Zero), None, None);
+        return (Some(protocol::Special::Zero), None, None);
     }
     if den == 0 {
         if positive {
-            return (Some(protocol::Fixed::PosInf), None, None);
+            return (Some(protocol::Special::PosInf), None, None);
         }
-        return (Some(protocol::Fixed::NegInf), None, None);
+        return (Some(protocol::Special::NegInf), None, None);
     }
     if num == den
     {
         if positive {
-            return (Some(protocol::Fixed::One), None, None);
+            return (Some(protocol::Special::One), None, None);
         }
-        return (Some(protocol::Fixed::NegOne), None, None);
+        return (Some(protocol::Special::NegOne), None, None);
     }
     if num > den {
         return (None, if positive { Some(protocol::Primer::Turn) } else { Some(protocol::Primer::Ground) }, Some(Ratio {num: den, den: num}));
