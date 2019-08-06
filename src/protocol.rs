@@ -1,24 +1,24 @@
-/// Basic components of a Number.
+/// Basic components of a Clog value.
 #[derive(Debug, PartialEq)]
 pub enum Reduction {
-    /// Number was greater than zero and lesser than one half, and was doubled.
+    /// Clog value was greater than zero and lesser than one half, and was doubled.
     Amplify,
-    /// Number was greater than one half and no greater than one, was reciprocated and then had one subtracted from itself.
+    /// Clog value was greater than one half and lesser than one, was reciprocated and then had one subtracted from itself.
     Uncover,
 }
 
-/// Ways to increase the representation range of a Number.
+/// Ways to increase the representation range of a Clog value.
 #[derive(Debug, PartialEq)]
 pub enum Primer {
-    /// The original value was greater than one and was reciprocated. 
+    /// The associated Clog value must be reciprocated in order to represent the intended value.
     Turn,
-	/// The original value was lesser than zero but no lesser than minus one, and was negated. 
+    /// The associated Clog value must be negated in order to represent the intended value.
     Reflect,
-	/// The original value was lesser than minus one, was negated and then was reciprocated.
+    /// The associated Clog value must be reciprocated and negated in order to represent the intended value.
     Ground,
 }
 
-/// Values that cannot be uniquely represented by the combination of a Primer and a Number.
+/// Values that cannot be uniquely represented by the combination of a Primer and a Clog.
 #[derive(Debug, PartialEq)]
 pub enum Special {
 	/// Negative infinity
