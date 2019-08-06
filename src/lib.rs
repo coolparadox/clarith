@@ -23,6 +23,9 @@ mod strategy;
 /// Building elements of numbers.
 pub mod protocol;
 
+/// Number comparison utilities.
+pub mod compare;
+
 use crate::strategy::Strategy;
 
 /// A number greater than zero and lesser than one with unbounded precision.
@@ -69,4 +72,3 @@ pub fn ratio_u(positive: bool, num: usize, den: usize) -> Number {
     }
     Number::Other(primer, Clog{strategy: Box::new(ratio.unwrap())})
 }
-
