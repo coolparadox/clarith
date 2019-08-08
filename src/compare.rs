@@ -322,7 +322,31 @@ pub fn compare(n1: Number, n2: Number) -> Ordering {
 }
 
 fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
-    Ordering::Equal
+    if s1 == s2 {
+        return Ordering::Equal;
+    }
+    if s1 == protocol::Special::NegInf {
+        return Ordering::Less;
+    }
+    if s2 == protocol::Special::NegInf {
+        return Ordering::Greater;
+    }
+    if s1 == protocol::Special::NegOne {
+        return Ordering::Less;
+    }
+    if s2 == protocol::Special::NegOne {
+        return Ordering::Greater;
+    }
+    if s1 == protocol::Special::Zero {
+        return Ordering::Less;
+    }
+    if s2 == protocol::Special::Zero {
+        return Ordering::Greater;
+    }
+    if s1 == protocol::Special::PosOne {
+        return Ordering::Less;
+    }
+    return Ordering::Greater;
 }
 
 fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>, c: Clog) -> Ordering {

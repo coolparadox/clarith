@@ -48,7 +48,7 @@ pub enum Special {
 	/// Zero
     Zero,
 	/// One
-    One,
+    PosOne,
 	/// Positive infinity
     PosInf,
 }

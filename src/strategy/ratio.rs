@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn supports_one() {
-        if let (Some(protocol::Special::One), None, None) = new(true, 1, 1) {
+        if let (Some(protocol::Special::PosOne), None, None) = new(true, 1, 1) {
             return;
         }
         panic!();
@@ -183,7 +183,7 @@ pub fn new(positive: bool, num: usize, den:usize) -> (Option<protocol::Special>,
     if num == den
     {
         if positive {
-            return (Some(protocol::Special::One), None, None);
+            return (Some(protocol::Special::PosOne), None, None);
         }
         return (Some(protocol::Special::NegOne), None, None);
     }
