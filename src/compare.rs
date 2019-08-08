@@ -18,6 +18,7 @@
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
+use crate::Clog;
 use crate::Number;
 use crate::protocol;
 use std::cmp::Ordering;
@@ -311,15 +312,23 @@ pub fn compare(n1: Number, n2: Number) -> Ordering {
     match n1 {
         Number::Special(s1) => match n2 {
             Number::Special(s2) => compare_specials(s1, s2),
-            Number::Other(p2, c2) => Ordering::Equal,
+            Number::Other(p2, c2) => compare_hybrid(s1, p2, c2),
         },
         Number::Other(p1, c1) => match n2 {
-            Number::Special(s2) => Ordering::Equal,
-            Number::Other(p2, c2) => Ordering::Equal,
+            Number::Special(s2) => compare_hybrid(s2, p1, c1).reverse(),
+            Number::Other(p2, c2) => compare_others(p1, c1, p2, c2),
         },
     }
 }
 
-pub fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
+fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
+    Ordering::Equal
+}
+
+fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>, c: Clog) -> Ordering {
+    Ordering::Equal
+}
+
+fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {
     Ordering::Equal
 }
