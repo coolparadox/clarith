@@ -19,6 +19,7 @@
  */
 
 use crate::Number;
+use crate::protocol;
 use std::cmp::Ordering;
 
 #[cfg(test)]
@@ -306,6 +307,19 @@ mod tests {
 
 }
 
-pub fn compare(_a: Number, _b: Number) -> Ordering {
+pub fn compare(n1: Number, n2: Number) -> Ordering {
+    match n1 {
+        Number::Special(s1) => match n2 {
+            Number::Special(s2) => compare_specials(s1, s2),
+            Number::Other(p2, c2) => Ordering::Equal,
+        },
+        Number::Other(p1, c1) => match n2 {
+            Number::Special(s2) => Ordering::Equal,
+            Number::Other(p2, c2) => Ordering::Equal,
+        },
+    }
+}
+
+pub fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
     Ordering::Equal
 }
