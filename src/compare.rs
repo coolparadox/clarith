@@ -29,9 +29,7 @@ mod tests {
     use crate::ratio;
     use super::*;
 
-    /* known well defined values from ratio unit tests:
-       -inf -2 -1 -2/3 -1/2 -1/4 0 1/4 1/2 2/3 1 2 inf
-     */
+    // known well defined values from ratio unit tests
 
     fn neg_inf() -> Number {
         ratio(-1, 0)
@@ -312,10 +310,10 @@ pub fn compare(n1: Number, n2: Number) -> Ordering {
     match n1 {
         Number::Special(s1) => match n2 {
             Number::Special(s2) => compare_specials(s1, s2),
-            Number::Other(p2, c2) => compare_hybrid(s1, p2, c2),
+            Number::Other(p2, _) => compare_hybrid(s1, p2),
         },
         Number::Other(p1, c1) => match n2 {
-            Number::Special(s2) => compare_hybrid(s2, p1, c1).reverse(),
+            Number::Special(s2) => compare_hybrid(s2, p1).reverse(),
             Number::Other(p2, c2) => compare_others(p1, c1, p2, c2),
         },
     }
@@ -349,8 +347,29 @@ fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
     return Ordering::Greater;
 }
 
-fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>, c: Clog) -> Ordering {
-    Ordering::Equal
+fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering {
+    if s == protocol::Special::NegInf {
+        return Ordering::Less;
+    }
+    if let Some(protocol::Primer::Ground) = p {
+        return Ordering::Greater;
+    }
+    if s == protocol::Special::NegOne {
+        return Ordering::Less;
+    }
+    if let Some(protocol::Primer::Reflect) = p {
+        return Ordering::Greater;
+    }
+    if s == protocol::Special::Zero {
+        return Ordering::Less;
+    }
+    if let None = p {
+        return Ordering::Greater;
+    }
+    if s == protocol::Special::PosOne {
+        return Ordering::Less;
+    }
+    return Ordering::Greater;
 }
 
 fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {
