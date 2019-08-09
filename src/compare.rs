@@ -373,5 +373,14 @@ fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering
 }
 
 fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {
+    let (cmp, polarity) = compare_primes(p1, p2);
+    cmp.then(compare_clogs(c1, c2, polarity))
+}
+
+fn compare_primes(p1: Option<protocol::Primer>, p2: Option<protocol::Primer>) -> (Ordering, bool) {
+    (Ordering::Equal, false)
+}
+
+fn compare_clogs(c1: Clog, c2: Clog, polarity: bool) -> Ordering {
     Ordering::Equal
 }
