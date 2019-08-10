@@ -160,6 +160,20 @@ mod tests {
         panic!();
     }
 
+    #[test]
+    fn one_half_is_final() {
+        if let (None, None, Some(mut ratio)) = new(true, 3, 6) {
+            for _ in 1..10 {
+                if let Ok(None) = ratio.egest() {
+                    continue;
+                }
+                panic!();
+            }
+            return;
+        }
+        panic!();
+    }
+
 }
 
 pub struct Ratio {
@@ -204,6 +218,7 @@ impl Strategy for Ratio {
         if self.den % 2 == 0 {
             self.den /= 2;
             if self.num == self.den {
+                self.den *= 2;
                 return Ok(None);
             }
         }
