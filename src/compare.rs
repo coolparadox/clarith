@@ -373,12 +373,30 @@ fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering
 }
 
 fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {
-    let (cmp, polarity) = compare_primes(p1, p2);
-    cmp.then(compare_clogs(c1, c2, polarity))
+    compare_primers(&p1, &p2)
+        .then(compare_clogs(c1, c2, p1 == Some(protocol::Primer::Reflect) || p1 == Some(protocol::Primer::Turn)))
 }
 
-fn compare_primes(p1: Option<protocol::Primer>, p2: Option<protocol::Primer>) -> (Ordering, bool) {
-    (Ordering::Equal, false)
+fn compare_primers(p1: &Option<protocol::Primer>, p2: &Option<protocol::Primer>) -> Ordering {
+    if p1 == p2 {
+        return Ordering::Equal;
+    }
+    if let Some(protocol::Primer::Ground) = p1 {
+        return Ordering::Less;
+    }
+    if let Some(protocol::Primer::Ground) = p2 {
+        return Ordering::Greater;
+    }
+    if let Some(protocol::Primer::Reflect) = p1 {
+        return Ordering::Less;
+    }
+    if let Some(protocol::Primer::Reflect) = p2 {
+        return Ordering::Greater;
+    }
+    if let None = p1 {
+        return Ordering::Less;
+    }
+    return Ordering::Greater;
 }
 
 fn compare_clogs(c1: Clog, c2: Clog, polarity: bool) -> Ordering {
