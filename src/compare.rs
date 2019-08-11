@@ -374,7 +374,7 @@ fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering
 
 fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {
     compare_primers(&p1, &p2)
-        .then(compare_clogs(c1, c2, p1 == Some(protocol::Primer::Reflect) || p1 == Some(protocol::Primer::Turn)))
+        .then(compare_clogs(c1, c2, p1 != Some(protocol::Primer::Reflect) && p1 != Some(protocol::Primer::Turn)))
 }
 
 fn compare_primers(p1: &Option<protocol::Primer>, p2: &Option<protocol::Primer>) -> Ordering {
@@ -399,6 +399,29 @@ fn compare_primers(p1: &Option<protocol::Primer>, p2: &Option<protocol::Primer>)
     return Ordering::Greater;
 }
 
-fn compare_clogs(c1: Clog, c2: Clog, polarity: bool) -> Ordering {
-    Ordering::Equal
+fn compare_clogs(mut c1: Clog, mut c2: Clog, mut polarity: bool) -> Ordering {
+    let mut e1: Option<protocol::Reduction>;
+    let mut e2: Option<protocol::Reduction>;
+    loop {
+        e1 = c1.egest();
+        e2 = c2.egest();
+        if e1 != e2 {
+            break;
+        }
+        if let None = e1 {
+            return Ordering::Equal;
+        }
+        if let Some(protocol::Reduction::Uncover) = e1 {
+            polarity = !polarity;
+        }
+    }
+    if let Some(protocol::Reduction::Uncover) = e1 {
+        polarity = !polarity;
+    }
+    if polarity {
+        Ordering::Less
+    }
+    else {
+        Ordering::Greater
+    }
 }
