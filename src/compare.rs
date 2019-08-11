@@ -26,61 +26,60 @@ use std::cmp::Ordering;
 #[cfg(test)]
 mod tests {
 
-    use crate::ratio;
     use super::*;
 
     // known well defined values from ratio unit tests
 
     fn neg_inf() -> Number {
-        ratio(-1, 0)
+        Number::from_ratio(-1, 0)
     }
 
     fn neg_two() -> Number {
-        ratio(-2, 1)
+        Number::from_ratio(-2, 1)
     }
 
     fn neg_one() -> Number {
-        ratio(-1, 1)
+        Number::from_ratio(-1, 1)
     }
 
     fn neg_two_thirds() -> Number {
-        ratio(-2, 3)
+        Number::from_ratio(-2, 3)
     }
 
     fn neg_one_half() -> Number {
-        ratio(-1, 2)
+        Number::from_ratio(-1, 2)
     }
 
     fn neg_one_fourth() -> Number {
-        ratio(-1, 4)
+        Number::from_ratio(-1, 4)
     }
 
     fn zero() -> Number {
-        ratio(0, 1)
+        Number::from_ratio(0, 1)
     }
 
     fn one_fourth() -> Number {
-        ratio(1, 4)
+        Number::from_ratio(1, 4)
     }
 
     fn one_half() -> Number {
-        ratio(1, 2)
+        Number::from_ratio(1, 2)
     }
 
     fn two_thirds() -> Number {
-        ratio(2, 3)
+        Number::from_ratio(2, 3)
     }
 
     fn one() -> Number {
-        ratio(1, 1)
+        Number::from_ratio(1, 1)
     }
 
     fn two() -> Number {
-        ratio(2, 1)
+        Number::from_ratio(2, 1)
     }
 
     fn inf() -> Number {
-        ratio(1, 0)
+        Number::from_ratio(1, 0)
     }
 
     #[test]

@@ -19,13 +19,12 @@
  */
 
 mod strategy;
+mod compare;
 
 /// Building elements of numbers.
 pub mod protocol;
 
-/// Number comparison utilities.
-pub mod compare;
-
+use std::cmp::Ordering;
 use crate::strategy::Strategy;
 
 /// A number greater than zero and lesser than one with unbounded precision.
@@ -56,19 +55,28 @@ pub enum Number {
     Other(Option<protocol::Primer>, Clog),
 }
 
-/// Construct a Number from the ratio of two signed machine integers.
-pub fn ratio(num: isize, den:isize) -> Number {
-    ratio_u(
-        (num >= 0 && den >= 0) || (num < 0 && den < 0),
-        if num >= 0 { num } else { -num } as usize,
-        if den >= 0 { den } else { -den } as usize)
-}
+impl Number {
 
-/// Construct a Number from the ratio of two unsigned machine integers.
-pub fn ratio_u(positive: bool, num: usize, den: usize) -> Number {
-    let (special, primer, ratio) = strategy::ratio::new(positive, num, den);
-    if let Some(fixed) = special {
-        return Number::Special(fixed);
+    /// Destructively compare two Numbers.
+    pub fn compare(n1: Number, n2: Number) -> Ordering {
+        compare::compare(n1, n2)
     }
-    Number::Other(primer, Clog{strategy: Box::new(ratio.unwrap())})
+
+    /// Construct a Number from the ratio of two signed machine integers.
+    pub fn from_ratio(num: isize, den:isize) -> Number {
+        Number::from_ratio_u(
+            (num >= 0 && den >= 0) || (num < 0 && den < 0),
+            if num >= 0 { num } else { -num } as usize,
+            if den >= 0 { den } else { -den } as usize)
+    }
+
+    /// Construct a Number from the ratio of two unsigned machine integers.
+    pub fn from_ratio_u(positive: bool, num: usize, den: usize) -> Number {
+        let (special, primer, ratio) = strategy::ratio::new(positive, num, den);
+        if let Some(fixed) = special {
+            return Number::Special(fixed);
+        }
+        Number::Other(primer, Clog{strategy: Box::new(ratio.unwrap())})
+    }
+
 }
