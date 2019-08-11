@@ -408,20 +408,28 @@ fn compare_clogs(mut c1: Clog, mut c2: Clog, mut polarity: bool) -> Ordering {
         if e1 != e2 {
             break;
         }
-        if let None = e1 {
-            return Ordering::Equal;
-        }
-        if let Some(protocol::Reduction::Uncover) = e1 {
-            polarity = !polarity;
+        match e1 {
+            None => {
+                return Ordering::Equal;
+            },
+            Some(protocol::Reduction::Uncover) => {
+                polarity = !polarity;
+            },
+            _ => {},
         }
     }
-    if let Some(protocol::Reduction::Uncover) = e1 {
-        polarity = !polarity;
-    }
+    let answer = match e1 {
+        None => match e2 {
+            Some(protocol::Reduction::Amplify) => Ordering::Greater,
+            _ => Ordering::Less,
+        },
+        Some(protocol::Reduction::Amplify) => Ordering::Less,
+        Some(protocol::Reduction::Uncover) => Ordering::Greater,
+    };
     if polarity {
-        Ordering::Less
+        answer
     }
     else {
-        Ordering::Greater
+        answer.reverse()
     }
 }
