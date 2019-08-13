@@ -174,6 +174,16 @@ mod tests {
         panic!();
     }
 
+    #[test]
+    fn does_not_overflow() {
+        if let (None, None, Some(mut ratio)) = new(true, usize::max_value() - 1, usize::max_value()) {
+            if let Ok(Some(protocol::Reduction::Uncover)) = ratio.egest() {
+                return;
+            }
+        }
+        panic!();
+    }
+
 }
 
 pub struct Ratio {
