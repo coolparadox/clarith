@@ -30,26 +30,496 @@ mod tests {
 
     use super::*;
 
-    /*
+    // known well defined values from ratio unit tests
+
+    fn neg_inf() -> Number {
+        Number::ratio(-1, 0)
+    }
+
+    fn neg_two() -> Number {
+        Number::ratio(-2, 1)
+    }
+
+    fn neg_one() -> Number {
+        Number::ratio(-1, 1)
+    }
+
+    fn neg_two_thirds() -> Number {
+        Number::ratio(-2, 3)
+    }
+
+    fn neg_one_half() -> Number {
+        Number::ratio(-1, 2)
+    }
+
+    fn neg_one_fourth() -> Number {
+        Number::ratio(-1, 4)
+    }
+
+    fn zero() -> Number {
+        Number::ratio(0, 1)
+    }
+
+    fn one_fourth() -> Number {
+        Number::ratio(1, 4)
+    }
+
+    fn one_half() -> Number {
+        Number::ratio(1, 2)
+    }
+
+    fn two_thirds() -> Number {
+        Number::ratio(2, 3)
+    }
+
+    fn one() -> Number {
+        Number::ratio(1, 1)
+    }
+
+    fn two() -> Number {
+        Number::ratio(2, 1)
+    }
+
+    fn inf() -> Number {
+        Number::ratio(1, 0)
+    }
+
+    // Support
+
+    fn assert_eq(n1: Number, n2: Number) {
+        assert_eq!(Number::compare(n1, n2), Ordering::Equal);
+    }
+
+     // Tests
+
+    #[test]
+    fn t_1111() {
+        fn h(x: Number) -> Number { Number::homographic(x, 1, 1, 1, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), one());
+        t(neg_two(), one());
+        t(neg_one(), one());
+        t(neg_two_thirds(), one());
+        t(neg_one_half(), one());
+        t(neg_one_fourth(), one());
+        t(zero(), one());
+        t(one_fourth(), one());
+        t(one_half(), one());
+        t(two_thirds(), one());
+        t(one(), one());
+        t(two(), one());
+        t(inf(), one());
+    }
+
+    #[test]
+    fn t_1110() {
+        fn h(x: Number) -> Number { Number::homographic(x, 1, 1, 1, 0) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), one());
+        t(neg_two(), one_half());
+        t(neg_one(), zero());
+        t(neg_two_thirds(), neg_one_half());
+        t(neg_one_half(), neg_one());
+        t(neg_one_fourth(), Number::ratio(-3, 1));
+        t(zero(), inf());
+        t(one_fourth(), Number::ratio(5, 1));
+        t(one_half(), Number::ratio(3, 1));
+        t(two_thirds(), Number::ratio(5, 2));
+        t(one(), two());
+        t(two(), Number::ratio(3, 2));
+        t(inf(), one());
+    }
+
+    #[test]
+    fn t_1101() {
+        fn h(x: Number) -> Number { Number::homographic(x, 1, 1, 0, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), neg_inf());
+        t(neg_two(), neg_one());
+        t(neg_one(), zero());
+        t(neg_two_thirds(), Number::ratio(1, 3));
+        t(neg_one_half(), one_half());
+        t(neg_one_fourth(), Number::ratio(-3, 4));
+        t(zero(), one());
+        t(one_fourth(), Number::ratio(5, 4));
+        t(one_half(), Number::ratio(3, 2));
+        t(two_thirds(), Number::ratio(5, 3));
+        t(one(), two());
+        t(two(), Number::ratio(3, 1));
+        t(inf(), inf());
+    }
+
+    #[test]
+    fn t_1011() {
+        fn h(x: Number) -> Number { Number::homographic(x, 1, 0, 1, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), one());
+        t(neg_two(), two());
+        t(neg_one(), neg_inf());
+        t(neg_two_thirds(), neg_two());
+        t(neg_one_half(), neg_one());
+        t(neg_one_fourth(), Number::ratio(-1, 3));
+        t(zero(), zero());
+        t(one_fourth(), Number::ratio(1, 5));
+        t(one_half(), Number::ratio(1, 3));
+        t(two_thirds(), Number::ratio(2, 5));
+        t(one(), one_half());
+        t(two(), two_thirds());
+        t(inf(), one());
+    }
+
+    #[test]
+    fn t_0111() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 1, 1, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), zero());
+        t(neg_two(), neg_one());
+        t(neg_one(), inf());
+        t(neg_two_thirds(), Number::ratio(3, 1));
+        t(neg_one_half(), two());
+        t(neg_one_fourth(), Number::ratio(4, 3));
+        t(zero(), one());
+        t(one_fourth(), Number::ratio(4, 5));
+        t(one_half(), Number::ratio(2, 3));
+        t(two_thirds(), Number::ratio(3, 5));
+        t(one(), one_half());
+        t(two(), Number::ratio(1, 3));
+        t(inf(), zero());
+    }
+
+    #[test]
+    fn t_0110() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 1, 1, 0) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), zero());
+        t(neg_two(), neg_one_half());
+        t(neg_one(), neg_one());
+        t(neg_two_thirds(), Number::ratio(-3, 2));
+        t(neg_one_half(), neg_two());
+        t(neg_one_fourth(), Number::ratio(-4, 1));
+        t(zero(), inf());
+        t(one_fourth(), Number::ratio(4, 1));
+        t(one_half(), two());
+        t(two_thirds(), Number::ratio(3, 2));
+        t(one(), one());
+        t(two(), one_half());
+        t(inf(), zero());
+    }
+
+    #[test]
+    fn t_0101() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 1, 0, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), one());
+        t(neg_two(), one());
+        t(neg_one(), one());
+        t(neg_two_thirds(), one());
+        t(neg_one_half(), one());
+        t(neg_one_fourth(), one());
+        t(zero(), one());
+        t(one_fourth(), one());
+        t(one_half(), one());
+        t(two_thirds(), one());
+        t(one(), one());
+        t(two(), one());
+        t(inf(), one());
+    }
+
+    #[test]
+    fn t_0011() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), zero());
+        t(neg_two(), zero());
+        // t(neg_one(), zero());
+        t(neg_two_thirds(), zero());
+        t(neg_one_half(), zero());
+        t(neg_one_fourth(), zero());
+        t(zero(), zero());
+        t(one_fourth(), zero());
+        t(one_half(), zero());
+        t(two_thirds(), zero());
+        t(one(), zero());
+        t(two(), zero());
+        t(inf(), zero());
+    }
+
     #[test]
     #[should_panic(expected = "undefined ratio")]
-    fn forbids_undefined_ratio() {
-        new(true, 0, 0);
+    fn t_0011_panic() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 1) }
+        h(neg_one());
     }
 
     #[test]
-    fn supports_negative_infinity() {
-        if let (Some(protocol::Special::NegInf), None, None) = new(false, 1, 0) {
-            return;
-        }
-        panic!();
+    fn t_0010() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 0) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), zero());
+        t(neg_two(), zero());
+        t(neg_one(), zero());
+        t(neg_two_thirds(), zero());
+        t(neg_one_half(), zero());
+        t(neg_one_fourth(), zero());
+        // t(zero(), zero());
+        t(one_fourth(), zero());
+        t(one_half(), zero());
+        t(two_thirds(), zero());
+        t(one(), zero());
+        t(two(), zero());
+        t(inf(), zero());
     }
-    */
 
     #[test]
-    fn zero() {
-        assert_eq!(Number::compare(Number::homographic(Number::ratio(0, 1), 1, 0, 0, 1), Number::ratio(0, 1)), Ordering::Equal);
+    #[should_panic(expected = "undefined ratio")]
+    fn t_0010_panic() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 0) }
+        h(zero());
     }
+
+    #[test]
+    fn t_0001() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 0, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), zero());
+        t(neg_two(), zero());
+        t(neg_one(), zero());
+        t(neg_two_thirds(), zero());
+        t(neg_one_half(), zero());
+        t(neg_one_fourth(), zero());
+        t(zero(), zero());
+        t(one_fourth(), zero());
+        t(one_half(), zero());
+        t(two_thirds(), zero());
+        t(one(), zero());
+        t(two(), zero());
+        t(inf(), zero());
+    }
+
+    #[test]
+    #[should_panic(expected = "undefined ratio")]
+    fn t_0000() {
+        Number::homographic(one(), 0, 0, 0, 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "undefined ratio")]
+    fn t_0021_panic() {
+        fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 2, 1) }
+        h(neg_one_half());
+    }
+
+    #[test]
+    fn t_pppp() {
+        fn h(x: Number) -> Number { Number::homographic(x, 2, 3, 4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(1, 2));
+        t(neg_two(), Number::ratio(1, 3));
+        t(neg_one(), Number::ratio(1, 1));
+        t(neg_two_thirds(), Number::ratio(5, 7));
+        t(neg_one_half(), Number::ratio(2, 3));
+        t(neg_one_fourth(), Number::ratio(5, 8));
+        t(zero(), Number::ratio(3, 5));
+        t(one_fourth(), Number::ratio(7, 12));
+        t(one_half(), Number::ratio(4, 7));
+        t(two_thirds(), Number::ratio(13, 23));
+        t(one(), Number::ratio(5, 9));
+        t(two(), Number::ratio(7, 13));
+        t(inf(), Number::ratio(1, 2));
+    }
+
+    #[test]
+    fn t_pppn() {
+        fn h(x: Number) -> Number { Number::homographic(x, 2, 3, 4, -5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(1, 2));
+        t(neg_two(), Number::ratio(1, 13));
+        t(neg_one(), Number::ratio(-1, 9));
+        t(neg_two_thirds(), Number::ratio(-5, 23));
+        t(neg_one_half(), Number::ratio(-2, 7));
+        t(neg_one_fourth(), Number::ratio(-5, 12));
+        t(zero(), Number::ratio(-3, 5));
+        t(one_fourth(), Number::ratio(-7, 8));
+        t(one_half(), Number::ratio(-4, 3));
+        t(two_thirds(), Number::ratio(-13, 7));
+        t(one(), Number::ratio(-5, 1));
+        t(two(), Number::ratio(7, 3));
+        t(inf(), Number::ratio(1, 2));
+    }
+
+    #[test]
+    fn t_ppnp() {
+        fn h(x: Number) -> Number { Number::homographic(x, 2, 3, -4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(-1, 2));
+        t(neg_two(), Number::ratio(-1, 13));
+        t(neg_one(), Number::ratio(1, 9));
+        t(neg_two_thirds(), Number::ratio(5, 23));
+        t(neg_one_half(), Number::ratio(2, 7));
+        t(neg_one_fourth(), Number::ratio(5, 12));
+        t(zero(), Number::ratio(3, 5));
+        t(one_fourth(), Number::ratio(7, 8));
+        t(one_half(), Number::ratio(4, 3));
+        t(two_thirds(), Number::ratio(13, 7));
+        t(one(), Number::ratio(5, 1));
+        t(two(), Number::ratio(-7, 3));
+        t(inf(), Number::ratio(-1, 2));
+    }
+
+    #[test]
+    fn t_pnpp() {
+        fn h(x: Number) -> Number { Number::homographic(x, 2, -3, 4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(1, 2));
+        t(neg_two(), Number::ratio(7, 3));
+        t(neg_one(), Number::ratio(-5, 1));
+        t(neg_two_thirds(), Number::ratio(-13, 7));
+        t(neg_one_half(), Number::ratio(-4, 3));
+        t(neg_one_fourth(), Number::ratio(-7, 8));
+        t(zero(), Number::ratio(-3, 5));
+        t(one_fourth(), Number::ratio(-5, 12));
+        t(one_half(), Number::ratio(-2, 7));
+        t(two_thirds(), Number::ratio(-5, 23));
+        t(one(), Number::ratio(-1, 9));
+        t(two(), Number::ratio(1, 13));
+        t(inf(), Number::ratio(1, 2));
+    }
+
+    #[test]
+    fn t_nppp() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, 3, 4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(-1, 2));
+        t(neg_two(), Number::ratio(-7, 3));
+        t(neg_one(), Number::ratio(5, 1));
+        t(neg_two_thirds(), Number::ratio(13, 7));
+        t(neg_one_half(), Number::ratio(4, 3));
+        t(neg_one_fourth(), Number::ratio(7, 8));
+        t(zero(), Number::ratio(3, 5));
+        t(one_fourth(), Number::ratio(5, 12));
+        t(one_half(), Number::ratio(2, 7));
+        t(two_thirds(), Number::ratio(5, 23));
+        t(one(), Number::ratio(1, 9));
+        t(two(), Number::ratio(-1, 13));
+        t(inf(), Number::ratio(-1, 2));
+    }
+
+    #[test]
+    fn t_nppn() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, 3, 4, -5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(-1, 2));
+        t(neg_two(), Number::ratio(-7, 13));
+        t(neg_one(), Number::ratio(-5, 9));
+        t(neg_two_thirds(), Number::ratio(-13, 23));
+        t(neg_one_half(), Number::ratio(-4, 7));
+        t(neg_one_fourth(), Number::ratio(-7, 12));
+        t(zero(), Number::ratio(-3, 5));
+        t(one_fourth(), Number::ratio(-5, 8));
+        t(one_half(), Number::ratio(-2, 3));
+        t(two_thirds(), Number::ratio(-5, 7));
+        t(one(), Number::ratio(-1, 1));
+        t(two(), Number::ratio(-1, 3));
+        t(inf(), Number::ratio(-1, 2));
+    }
+
+    #[test]
+    fn t_npnp() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, 3, -4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(-1, 2));
+        t(neg_two(), Number::ratio(-7, 13));
+        t(neg_one(), Number::ratio(-5, 9));
+        t(neg_two_thirds(), Number::ratio(-13, 23));
+        t(neg_one_half(), Number::ratio(-4, 7));
+        t(neg_one_fourth(), Number::ratio(-7, 12));
+        t(zero(), Number::ratio(-3, 5));
+        t(one_fourth(), Number::ratio(-5, 8));
+        t(one_half(), Number::ratio(-2, 3));
+        t(two_thirds(), Number::ratio(-5, 7));
+        t(one(), Number::ratio(-1, 1));
+        t(two(), Number::ratio(-1, 3));
+        t(inf(), Number::ratio(-1, 2));
+    }
+
+    #[test]
+    fn t_nnpp() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, -3, 4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(-1, 2));
+        t(neg_two(), Number::ratio(-1, 3));
+        t(neg_one(), Number::ratio(-1, 1));
+        t(neg_two_thirds(), Number::ratio(-5, 7));
+        t(neg_one_half(), Number::ratio(-2, 3));
+        t(neg_one_fourth(), Number::ratio(-5, 8));
+        t(zero(), Number::ratio(-3, 5));
+        t(one_fourth(), Number::ratio(-7, 12));
+        t(one_half(), Number::ratio(-4, 7));
+        t(two_thirds(), Number::ratio(-13, 23));
+        t(one(), Number::ratio(-5, 9));
+        t(two(), Number::ratio(-7, 13));
+        t(inf(), Number::ratio(-1, 2));
+    }
+
+    #[test]
+    fn t_nnpn() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, -3, 4, -5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(-1, 2));
+        t(neg_two(), Number::ratio(-1, 13));
+        t(neg_one(), Number::ratio(1, 9));
+        t(neg_two_thirds(), Number::ratio(5, 23));
+        t(neg_one_half(), Number::ratio(2, 7));
+        t(neg_one_fourth(), Number::ratio(5, 12));
+        t(zero(), Number::ratio(3, 5));
+        t(one_fourth(), Number::ratio(7, 8));
+        t(one_half(), Number::ratio(4, 3));
+        t(two_thirds(), Number::ratio(13, 7));
+        t(one(), Number::ratio(5, 1));
+        t(two(), Number::ratio(-7, 3));
+        t(inf(), Number::ratio(-1, 2));
+    }
+
+    #[test]
+    fn t_nnnp() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, -3, -4, 5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(1, 2));
+        t(neg_two(), Number::ratio(1, 13));
+        t(neg_one(), Number::ratio(-1, 9));
+        t(neg_two_thirds(), Number::ratio(-5, 23));
+        t(neg_one_half(), Number::ratio(-2, 7));
+        t(neg_one_fourth(), Number::ratio(-5, 12));
+        t(zero(), Number::ratio(-3, 5));
+        t(one_fourth(), Number::ratio(-7, 8));
+        t(one_half(), Number::ratio(-4, 3));
+        t(two_thirds(), Number::ratio(-13, 7));
+        t(one(), Number::ratio(-5, 1));
+        t(two(), Number::ratio(7, 3));
+        t(inf(), Number::ratio(1, 2));
+    }
+
+    #[test]
+    fn t_nnnn() {
+        fn h(x: Number) -> Number { Number::homographic(x, -2, -3, -4, -5) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(1, 2));
+        t(neg_two(), Number::ratio(1, 3));
+        t(neg_one(), Number::ratio(1, 1));
+        t(neg_two_thirds(), Number::ratio(5, 7));
+        t(neg_one_half(), Number::ratio(2, 3));
+        t(neg_one_fourth(), Number::ratio(5, 8));
+        t(zero(), Number::ratio(3, 5));
+        t(one_fourth(), Number::ratio(7, 12));
+        t(one_half(), Number::ratio(4, 7));
+        t(two_thirds(), Number::ratio(13, 23));
+        t(one(), Number::ratio(5, 9));
+        t(two(), Number::ratio(7, 13));
+        t(inf(), Number::ratio(1, 2));
+    }
+
+    // FIXME: overflow tests
+
 }
 
 pub struct Homographic {
