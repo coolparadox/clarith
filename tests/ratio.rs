@@ -53,8 +53,8 @@ fn compare_ratios() {
                 while d2 <= range {
                     assert_eq!(
                         Number::compare(
-                            Number::from_ratio(n1, d1),
-                            Number::from_ratio(n2, d2)),
+                            Number::ratio(n1, d1),
+                            Number::ratio(n2, d2)),
                         reference_compare(n1, d1, n2, d2));
                     d2 += 1;
                     if n2 == 0 && d2 == 0 {

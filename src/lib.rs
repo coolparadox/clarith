@@ -63,20 +63,43 @@ impl Number {
     }
 
     /// Construct a Number from the ratio of two signed machine integers.
-    pub fn from_ratio(num: isize, den:isize) -> Number {
-        Number::from_ratio_u(
+    pub fn ratio(num: isize, den:isize) -> Number {
+        Number::ratio_u(
             (num >= 0 && den >= 0) || (num < 0 && den < 0),
             if num >= 0 { num } else { -num } as usize,
             if den >= 0 { den } else { -den } as usize)
     }
 
     /// Construct a Number from the ratio of two unsigned machine integers.
-    pub fn from_ratio_u(positive: bool, num: usize, den: usize) -> Number {
+    pub fn ratio_u(positive: bool, num: usize, den: usize) -> Number {
         let (special, primer, ratio) = strategy::ratio::new(positive, num, den);
         if let Some(fixed) = special {
             return Number::Special(fixed);
         }
         Number::Other(primer, Clog{strategy: Box::new(ratio.unwrap())})
+    }
+
+    /// Construct a Number by applying an homographic transformation to another Number.
+    pub fn homographic(x: Number, a: isize, b: isize, c: isize, d: isize) -> Number {
+        Number::homographic_u(
+            x,
+            a >= 0, if a >= 0 { a } else { -a } as usize,
+            b >= 0, if b >= 0 { b } else { -b } as usize,
+            c >= 0, if c >= 0 { c } else { -c } as usize,
+            d >= 0, if d >= 0 { d } else { -d } as usize)
+    }
+
+    /// Same as homographic(), except the parameters are unsigned.
+    pub fn homographic_u(x: Number, pa: bool, a: usize, pb: bool, b: usize, pc: bool, c: usize, pd: bool, d: usize) -> Number {
+        let (special, primer, ratio, homographic) = strategy::homographic::new(x, pa, a, pb, b, pc, c, pd, d);
+        if let Some(fixed) = special {
+            return Number::Special(fixed);
+        }
+        if let Some(ratio) = ratio
+        {
+            return Number::Other(primer, Clog{strategy: Box::new(ratio)})
+        }
+        Number::Other(primer, Clog{strategy: Box::new(homographic.unwrap())})
     }
 
 }

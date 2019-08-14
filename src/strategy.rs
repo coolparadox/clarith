@@ -19,6 +19,7 @@
  */
 
 pub mod ratio;
+pub mod homographic;
 
 use crate::protocol;
 

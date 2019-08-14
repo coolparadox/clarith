@@ -31,55 +31,55 @@ mod tests {
     // known well defined values from ratio unit tests
 
     fn neg_inf() -> Number {
-        Number::from_ratio(-1, 0)
+        Number::ratio(-1, 0)
     }
 
     fn neg_two() -> Number {
-        Number::from_ratio(-2, 1)
+        Number::ratio(-2, 1)
     }
 
     fn neg_one() -> Number {
-        Number::from_ratio(-1, 1)
+        Number::ratio(-1, 1)
     }
 
     fn neg_two_thirds() -> Number {
-        Number::from_ratio(-2, 3)
+        Number::ratio(-2, 3)
     }
 
     fn neg_one_half() -> Number {
-        Number::from_ratio(-1, 2)
+        Number::ratio(-1, 2)
     }
 
     fn neg_one_fourth() -> Number {
-        Number::from_ratio(-1, 4)
+        Number::ratio(-1, 4)
     }
 
     fn zero() -> Number {
-        Number::from_ratio(0, 1)
+        Number::ratio(0, 1)
     }
 
     fn one_fourth() -> Number {
-        Number::from_ratio(1, 4)
+        Number::ratio(1, 4)
     }
 
     fn one_half() -> Number {
-        Number::from_ratio(1, 2)
+        Number::ratio(1, 2)
     }
 
     fn two_thirds() -> Number {
-        Number::from_ratio(2, 3)
+        Number::ratio(2, 3)
     }
 
     fn one() -> Number {
-        Number::from_ratio(1, 1)
+        Number::ratio(1, 1)
     }
 
     fn two() -> Number {
-        Number::from_ratio(2, 1)
+        Number::ratio(2, 1)
     }
 
     fn inf() -> Number {
-        Number::from_ratio(1, 0)
+        Number::ratio(1, 0)
     }
 
     #[test]
