@@ -518,6 +518,32 @@ mod tests {
         t(inf(), Number::ratio(1, 2));
     }
 
+    #[test]
+    fn t_6342() {
+        fn h(x: Number) -> Number { Number::homographic(x, 6, 3, 4, 2) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_inf(), Number::ratio(3, 2));
+        t(neg_two(), Number::ratio(3, 2));
+        t(neg_one(), Number::ratio(3, 2));
+        t(neg_two_thirds(), Number::ratio(3, 2));
+        // t(neg_one_half(), Number::ratio(3, 2));
+        t(neg_one_fourth(), Number::ratio(3, 2));
+        t(zero(), Number::ratio(3, 2));
+        t(one_fourth(), Number::ratio(3, 2));
+        t(one_half(), Number::ratio(3, 2));
+        t(two_thirds(), Number::ratio(3, 2));
+        t(one(), Number::ratio(3, 2));
+        t(two(), Number::ratio(3, 2));
+        t(inf(), Number::ratio(3, 2));
+    }
+
+    #[test]
+    #[should_panic(expected = "undefined ratio")]
+    fn t_6342_panic() {
+        fn h(x: Number) -> Number { Number::homographic(x, 6, 3, 4, 2) }
+        h(neg_one_half());
+    }
+
     // FIXME: overflow tests
 
 }
