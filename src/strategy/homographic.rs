@@ -21,6 +21,7 @@
 use std::cmp::Ordering;
 use crate::protocol;
 use crate::strategy::Strategy;
+use crate::strategy::ratio;
 use crate::strategy::ratio::Ratio;
 use crate::Clog;
 use crate::Number;
@@ -559,7 +560,17 @@ pub struct Homographic {
     d: usize,
 }
 
-pub fn new(_x: Number, _pa: bool, _a: usize, _pb: bool, _b: usize, _pc: bool, _c: usize, _pd: bool, _d: usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+pub fn new(x: Number, mut pa: bool, a: usize, mut pb: bool, b: usize, pc: bool, c: usize, mut pd: bool, d: usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+    if !pc {
+        pa = !pa;
+        pb = !pb;
+        pd = !pd;
+    }
+    if a == 0 && c == 0 {
+        let p = (pb && pd) || (!pb && !pd);
+        let (special, primer, ratio) = ratio::new(p, b, d);
+        return (special, primer, ratio, None);
+    }
     (Some(protocol::Special::Zero), None, None, None)
 }
 
