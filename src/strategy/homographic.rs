@@ -19,6 +19,7 @@
  */
 
 use std::cmp::Ordering;
+use std::mem::swap;
 use crate::protocol;
 use crate::strategy::Strategy;
 use crate::strategy::ratio;
@@ -557,7 +558,7 @@ pub struct Homographic {
     d: isize,
 }
 
-pub fn new(x: Number, a: isize, b: isize, c: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
     fn as_ratio(n: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
         let (special, primer, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), n as usize, d as usize);
         (special, primer, ratio, None)
@@ -583,9 +584,15 @@ pub fn new(x: Number, a: isize, b: isize, c: isize, d: isize) -> (Option<protoco
                     as_ratio(a, c)
                 }
             },
-            protocol::Special::NegOne => { as_ratio(b.checked_sub(a).unwrap(), d.checked_sub(c).unwrap()) },
-            protocol::Special::Zero => { as_ratio(b, d) },
-            protocol::Special::PosOne => { as_ratio(b.checked_add(a).unwrap(), d.checked_add(c).unwrap()) },
+            protocol::Special::NegOne => {
+                as_ratio(b.checked_sub(a).unwrap(), d.checked_sub(c).unwrap())
+            },
+            protocol::Special::Zero => {
+                as_ratio(b, d)
+            },
+            protocol::Special::PosOne => {
+                as_ratio(b.checked_add(a).unwrap(), d.checked_add(c).unwrap())
+            },
             protocol::Special::PosInf => {
                 if a == 0 {
                     (Some(protocol::Special::Zero), None, None, None)
@@ -604,6 +611,21 @@ pub fn new(x: Number, a: isize, b: isize, c: isize, d: isize) -> (Option<protoco
             },
         }
     }
+    if b == 0 && d == 0 {
+        return as_ratio(a, c);
+    }
+    let mut reflect = || {
+        a = -a;
+        c = -c;
+    };
+    let turn = || {
+        swap(&mut a, &mut b);
+        swap(&mut c, &mut d);
+    };
+    reflect();
+
+
+
     (Some(protocol::Special::Zero), None, None, None)
 }
 
