@@ -551,25 +551,58 @@ mod tests {
 
 pub struct Homographic {
     x: Clog,
-    pa: bool,
-    a: usize,
-    pb: bool,
-    b: usize,
-    c: usize,
-    pd: bool,
-    d: usize,
+    a: isize,
+    b: isize,
+    c: isize,
+    d: isize,
 }
 
-pub fn new(x: Number, mut pa: bool, a: usize, mut pb: bool, b: usize, pc: bool, c: usize, mut pd: bool, d: usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
-    if !pc {
-        pa = !pa;
-        pb = !pb;
-        pd = !pd;
+pub fn new(x: Number, a: isize, b: isize, c: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+    fn as_ratio(n: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+        let (special, primer, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), n as usize, d as usize);
+        (special, primer, ratio, None)
     }
     if a == 0 && c == 0 {
-        let p = (pb && pd) || (!pb && !pd);
-        let (special, primer, ratio) = ratio::new(p, b, d);
-        return (special, primer, ratio, None);
+        return as_ratio(b, d);
+    }
+    if let Number::Special(special) = x {
+        return match special {
+            protocol::Special::NegInf => {
+                if a == 0 {
+                    (Some(protocol::Special::Zero), None, None, None)
+                }
+                else if c == 0 {
+                    if a > 0 {
+                        (Some(protocol::Special::NegInf), None, None, None)
+                    }
+                    else {
+                        (Some(protocol::Special::PosInf), None, None, None)
+                    }
+                }
+                else {
+                    as_ratio(a, c)
+                }
+            },
+            protocol::Special::NegOne => { as_ratio(b.checked_sub(a).unwrap(), d.checked_sub(c).unwrap()) },
+            protocol::Special::Zero => { as_ratio(b, d) },
+            protocol::Special::PosOne => { as_ratio(b.checked_add(a).unwrap(), d.checked_add(c).unwrap()) },
+            protocol::Special::PosInf => {
+                if a == 0 {
+                    (Some(protocol::Special::Zero), None, None, None)
+                }
+                else if c == 0 {
+                    if a > 0 {
+                        (Some(protocol::Special::PosInf), None, None, None)
+                    }
+                    else {
+                        (Some(protocol::Special::NegInf), None, None, None)
+                    }
+                }
+                else {
+                    as_ratio(a, c)
+                }
+            },
+        }
     }
     (Some(protocol::Special::Zero), None, None, None)
 }

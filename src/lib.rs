@@ -81,17 +81,7 @@ impl Number {
 
     /// Construct a Number by applying an homographic transformation to another Number.
     pub fn homographic(x: Number, a: isize, b: isize, c: isize, d: isize) -> Number {
-        Number::homographic_u(
-            x,
-            a >= 0, if a >= 0 { a } else { -a } as usize,
-            b >= 0, if b >= 0 { b } else { -b } as usize,
-            c >= 0, if c >= 0 { c } else { -c } as usize,
-            d >= 0, if d >= 0 { d } else { -d } as usize)
-    }
-
-    /// Same as homographic(), except the parameters are unsigned.
-    pub fn homographic_u(x: Number, pa: bool, a: usize, pb: bool, b: usize, pc: bool, c: usize, pd: bool, d: usize) -> Number {
-        let (special, primer, ratio, homographic) = strategy::homographic::new(x, pa, a, pb, b, pc, c, pd, d);
+        let (special, primer, ratio, homographic) = strategy::homographic::new(x, a, b, c, d);
         if let Some(fixed) = special {
             return Number::Special(fixed);
         }
