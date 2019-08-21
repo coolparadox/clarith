@@ -57,6 +57,20 @@ pub enum Number {
 
 impl Number {
 
+    pub fn as_special(&self) -> &protocol::Special {
+        match self {
+            Number::Special(special) => special,
+            _ => panic!("Number is not Special"),
+        }
+    }
+
+    pub fn as_other(&self) -> (&Option<protocol::Primer>, &Clog) {
+        match self {
+            Number::Other(primer, clog) => (primer, clog),
+            _ => panic!("Number is not Other"),
+        }
+    }
+
     /// Destructively compare two Numbers.
     pub fn compare(n1: Number, n2: Number) -> Ordering {
         compare::compare(n1, n2)

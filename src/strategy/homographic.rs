@@ -559,13 +559,16 @@ pub struct Homographic {
 }
 
 pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+
     fn as_ratio(n: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
         let (special, primer, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), n as usize, d as usize);
         (special, primer, ratio, None)
     }
+
     if a == 0 && c == 0 {
         return as_ratio(b, d);
     }
+
     if let Number::Special(special) = x {
         return match special {
             protocol::Special::NegInf => {
@@ -611,20 +614,58 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
             },
         }
     }
+
     if b == 0 && d == 0 {
         return as_ratio(a, c);
     }
-    let mut reflect = || {
-        a = -a;
-        c = -c;
-    };
-    let turn = || {
-        swap(&mut a, &mut b);
-        swap(&mut c, &mut d);
-    };
-    reflect();
 
+    let (primer_opt, clog) = x.as_other();
+    if let Some(primer) = primer_opt {
+        match primer {
+            protocol::Primer::Turn => {
+                swap(&mut a, &mut b);
+                swap(&mut c, &mut d);
+            },
+            protocol::Primer::Reflect => {
+                a = -a;
+                c = -c;
+            },
+            protocol::Primer::Ground => {
+                a = -a;
+                c = -c;
+                swap(&mut a, &mut b);
+                swap(&mut c, &mut d);
+            },
+        }
+    }
 
+    fn is_primeable(a: isize, b: isize, c: isize, d: isize) -> Result<Option<protocol::Primer>, i32> {
+        if Number::compare(Number::ratio(-b, a), Number::ratio(0, 1)) == Ordering::Greater && Number::compare(Number::ratio(-b, a), Number::ratio(1, 1)) == Ordering::Less {
+            return Err(0);
+        }
+        if Number::compare(Number::ratio(-d, c), Number::ratio(0, 1)) == Ordering::Greater && Number::compare(Number::ratio(-d, c), Number::ratio(1, 1)) == Ordering::Less {
+            return Err(0);
+        }
+        let a_b = a.checked_add(b).unwrap();
+        let c_d = c.checked_add(d).unwrap();
+        if Number::compare(Number::ratio(b, d), Number::ratio(-1, 1)) == Ordering::Less && Number::compare(Number::ratio(a_b, c_d), Number::ratio(-1, 1)) == Ordering::Less {
+            Ok(Some(protocol::Primer::Ground))
+        }
+        else if Number::compare(Number::ratio(b, d), Number::ratio(-1, 1)) == Ordering::Greater && Number::compare(Number::ratio(a_b, c_d), Number::ratio(-1, 1)) == Ordering::Greater
+            && Number::compare(Number::ratio(b, d), Number::ratio(0, 1)) == Ordering::Less && Number::compare(Number::ratio(a_b, c_d), Number::ratio(0, 1)) == Ordering::Less {
+            Ok(Some(protocol::Primer::Reflect))
+        }
+        else if Number::compare(Number::ratio(b, d), Number::ratio(0, 1)) == Ordering::Greater && Number::compare(Number::ratio(a_b, c_d), Number::ratio(0, 1)) == Ordering::Greater
+            && Number::compare(Number::ratio(b, d), Number::ratio(1, 1)) == Ordering::Less && Number::compare(Number::ratio(a_b, c_d), Number::ratio(1, 1)) == Ordering::Less {
+            Ok(None)
+        }
+        else if Number::compare(Number::ratio(b, d), Number::ratio(1, 1)) == Ordering::Greater && Number::compare(Number::ratio(a_b, c_d), Number::ratio(1, 1)) == Ordering::Greater {
+            Ok(Some(protocol::Primer::Turn))
+        }
+        else {
+            Err(0)
+        }
+    }
 
     (Some(protocol::Special::Zero), None, None, None)
 }
