@@ -639,27 +639,49 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
         }
     }
 
+    fn compare(n1: isize, d1: isize, n2: isize, d2: isize) -> Ordering {
+        Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2))
+    }
+
+    fn lt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
+        compare(n1, d1, n2, d2) == Ordering::Less
+    }
+
+    fn gt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
+        compare(n1, d1, n2, d2) == Ordering::Greater
+    }
+
+    fn inside_domain(n: isize, d:isize) -> bool {
+        gt(n, d, 0, 1) && lt(n, d, 1, 1)
+    }
+
+    fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
+        if lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
+    }
+
     fn is_primeable(a: isize, b: isize, c: isize, d: isize) -> Result<Option<protocol::Primer>, i32> {
-        if Number::compare(Number::ratio(-b, a), Number::ratio(0, 1)) == Ordering::Greater && Number::compare(Number::ratio(-b, a), Number::ratio(1, 1)) == Ordering::Less {
+        // zero
+        if inside_domain(-b, a) {
             return Err(0);
         }
-        if Number::compare(Number::ratio(-d, c), Number::ratio(0, 1)) == Ordering::Greater && Number::compare(Number::ratio(-d, c), Number::ratio(1, 1)) == Ordering::Less {
+        // pole
+        if inside_domain(-d, c) {
             return Err(0);
         }
-        let a_b = a.checked_add(b).unwrap();
-        let c_d = c.checked_add(d).unwrap();
-        if Number::compare(Number::ratio(b, d), Number::ratio(-1, 1)) == Ordering::Less && Number::compare(Number::ratio(a_b, c_d), Number::ratio(-1, 1)) == Ordering::Less {
+        // image extremes
+        let (nmin, dmin, nmax, dmax) = sort(b, d, a.checked_add(b).unwrap(), c.checked_add(d).unwrap());
+        // try to classify image range
+        // FIXME: these comparisons can be optimized
+        if lt(nmax, dmax, -1, 1) {
             Ok(Some(protocol::Primer::Ground))
         }
-        else if Number::compare(Number::ratio(b, d), Number::ratio(-1, 1)) == Ordering::Greater && Number::compare(Number::ratio(a_b, c_d), Number::ratio(-1, 1)) == Ordering::Greater
-            && Number::compare(Number::ratio(b, d), Number::ratio(0, 1)) == Ordering::Less && Number::compare(Number::ratio(a_b, c_d), Number::ratio(0, 1)) == Ordering::Less {
+        else if gt(nmin, dmin, -1, 1) && lt(nmax, dmax, 0, 1) {
             Ok(Some(protocol::Primer::Reflect))
         }
-        else if Number::compare(Number::ratio(b, d), Number::ratio(0, 1)) == Ordering::Greater && Number::compare(Number::ratio(a_b, c_d), Number::ratio(0, 1)) == Ordering::Greater
-            && Number::compare(Number::ratio(b, d), Number::ratio(1, 1)) == Ordering::Less && Number::compare(Number::ratio(a_b, c_d), Number::ratio(1, 1)) == Ordering::Less {
+        else if gt(nmin, dmin, 0, 1) && lt(nmax, dmax, 1, 1) {
             Ok(None)
         }
-        else if Number::compare(Number::ratio(b, d), Number::ratio(1, 1)) == Ordering::Greater && Number::compare(Number::ratio(a_b, c_d), Number::ratio(1, 1)) == Ordering::Greater {
+        else if gt(nmin, dmin, 1, 1) {
             Ok(Some(protocol::Primer::Turn))
         }
         else {
