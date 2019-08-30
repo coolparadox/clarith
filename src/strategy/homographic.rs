@@ -561,7 +561,7 @@ pub struct Homographic {
 pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
 
     fn as_ratio(n: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
-        let (special, primer, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), n as usize, d as usize);
+        let (special, primer, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), if n >= 0 { n } else { -n } as usize, if d >= 0 { d } else { -d } as usize);
         (special, primer, ratio, None)
     }
 
@@ -671,7 +671,7 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
         // image extremes
         let (nmin, dmin, nmax, dmax) = sort(b, d, a.checked_add(b).unwrap(), c.checked_add(d).unwrap());
         // try to classify image range
-        // FIXME: these comparisons can be optimized
+        // FIXME: optimize comparisons
         if lt(nmax, dmax, -1, 1) {
             Ok(Some(protocol::Primer::Ground))
         }
@@ -690,6 +690,25 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
     }
 
     (Some(protocol::Special::Zero), None, None, None)
+}
+
+impl Homographic {
+
+    fn ingest(&mut self) -> Option<Ratio> {
+        match self.x.egest() {
+            None => {
+                let n = a.checked_add(b.checked_mul(2).unwrap()).unwrap();
+                let d = c.checked_add(d.checked_mul(2).unwrap()).unwrap();
+                if let (None, None, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), if n >= 0 { n } else { -n } as usize, if d >= 0 { d } else { -d } as usize) {
+                    return Some(ratio);
+                }
+                panic("logic error");
+            },
+            ...
+        }
+        None
+    }
+
 }
 
 impl Strategy for Homographic {
