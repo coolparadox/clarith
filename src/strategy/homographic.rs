@@ -697,41 +697,36 @@ impl Homographic {
     fn ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
             None => {
-                let (n, d) = if a % 2 != 0 || c % 2 != 0 {
-                    (a.checked_add(b.checked_mul(2).unwrap()).unwrap(), c.checked_add(d.checked_mul(2).unwrap()).unwrap())
+                let (num, den) = if self.a % 2 != 0 || self.c % 2 != 0 {
+                    (self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(), self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
                 }
                 else {
-                    (b.checked_add(a / 2).unwrap(), d.checked_add(c / 2).unwrap())
+                    (self.b.checked_add(self.a / 2).unwrap(), self.d.checked_add(self.c / 2).unwrap())
+                };
+                match ratio::new((num >= 0 && den >= 0) || (num < 0 && den < 0), if num >= 0 { num } else { -num } as usize, if den >= 0 { den } else { -den } as usize) {
+                    (None, None, Some(ratio)) => Some(ratio),
+                    _ => panic!("logic error"),
                 }
-                if let (None, None, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), if n >= 0 { n } else { -n } as usize, if d >= 0 { d } else { -d } as usize) {
-                    return Some(ratio);
-                }
-                panic("logic error");
             },
             Some(protocol::Reduction::Amplify) => {
-                if a % 2 != 0 || c % 2 != 0 {
-                    b = b.checked_mul(2).unwrap();
-                    d = d.checked_mul(2).unwrap();
+                if self.a % 2 != 0 || self.c % 2 != 0 {
+                    self.b = self.b.checked_mul(2).unwrap();
+                    self.d = self.d.checked_mul(2).unwrap();
                 }
                 else {
-                    a /= 2;
-                    c /= 2;
+                    self.a /= 2;
+                    self.c /= 2;
                 }
-                return None;
-            }
+                None
+            },
             Some(protocol::Reduction::Uncover) => {
-                // assert(!__builtin_add_overflow(_n1, _n0, &_n1));
-                // assert(!__builtin_add_overflow(_d1, _d0, &_d1));
-                // std::swap(_n1, _n0);
-                // std::swap(_d1, _d0);
-                a = a.checked_add(b);
-                c = c.checked_add(d);
-                swap(a, b);
-                swap(c, d);
-            }
-            ...
+                self.a = self.a.checked_add(self.b).unwrap();
+                self.c = self.c.checked_add(self.d).unwrap();
+                swap(&mut self.a, &mut self.b);
+                swap(&mut self.c, &mut self.d);
+                None
+            },
         }
-        None
     }
 
 }
