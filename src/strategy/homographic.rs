@@ -694,6 +694,27 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
 
 impl Homographic {
 
+    fn compare(n1: isize, d1: isize, n2: isize, d2: isize) -> Ordering {
+        Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2))
+    }
+
+    fn lt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
+        Homographic::compare(n1, d1, n2, d2) == Ordering::Less
+    }
+
+    fn gt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
+        Homographic::compare(n1, d1, n2, d2) == Ordering::Greater
+    }
+
+    fn inside_domain(n: isize, d:isize) -> bool {
+        Homographic::gt(n, d, 0, 1) && Homographic::lt(n, d, 1, 1)
+    }
+
+    fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
+        if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
+    }
+
+
     fn ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
             None => {
@@ -734,7 +755,33 @@ impl Homographic {
 impl Strategy for Homographic {
 
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
-        Ok(None)
+        // zero, pole
+        if Homographic::inside_domain(-self.b, self.a) || Homographic::inside_domain(-self.d, self.c) {
+            match self.ingest() {
+                Some(ratio) => Err(Box::new(ratio)),
+                None => self.egest(),
+            }
+        }
+        else
+        {
+            // image extremes
+            let (nmin, dmin, nmax, dmax) = Homographic::sort(self.b, self.d, self.a.checked_add(self.b).unwrap(), self.c.checked_add(self.d).unwrap());
+            if Homographic::lt(nmax, dmax, 1, 2) {
+                if self.c % 2 != 0 || self.d % 2 != 0 {
+                    self.a = self.a.checked_mul(2).unwrap();
+                    self.b = self.b.checked_mul(2).unwrap();
+                }
+                else {
+                    self.c /= 2;
+                    self.d /= 2;
+                }
+                Ok(Some(protocol::Reduction::Amplify))
+            }
+            ... else if ...
+            else {
+                Ok(None)
+            }
+        }
     }
 
 }
