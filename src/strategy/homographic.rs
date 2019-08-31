@@ -697,13 +697,38 @@ impl Homographic {
     fn ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
             None => {
-                let n = a.checked_add(b.checked_mul(2).unwrap()).unwrap();
-                let d = c.checked_add(d.checked_mul(2).unwrap()).unwrap();
+                let (n, d) = if a % 2 != 0 || c % 2 != 0 {
+                    (a.checked_add(b.checked_mul(2).unwrap()).unwrap(), c.checked_add(d.checked_mul(2).unwrap()).unwrap())
+                }
+                else {
+                    (b.checked_add(a / 2).unwrap(), d.checked_add(c / 2).unwrap())
+                }
                 if let (None, None, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), if n >= 0 { n } else { -n } as usize, if d >= 0 { d } else { -d } as usize) {
                     return Some(ratio);
                 }
                 panic("logic error");
             },
+            Some(protocol::Reduction::Amplify) => {
+                if a % 2 != 0 || c % 2 != 0 {
+                    b = b.checked_mul(2).unwrap();
+                    d = d.checked_mul(2).unwrap();
+                }
+                else {
+                    a /= 2;
+                    c /= 2;
+                }
+                return None;
+            }
+            Some(protocol::Reduction::Uncover) => {
+                // assert(!__builtin_add_overflow(_n1, _n0, &_n1));
+                // assert(!__builtin_add_overflow(_d1, _d0, &_d1));
+                // std::swap(_n1, _n0);
+                // std::swap(_d1, _d0);
+                a = a.checked_add(b);
+                c = c.checked_add(d);
+                swap(a, b);
+                swap(c, d);
+            }
             ...
         }
         None
