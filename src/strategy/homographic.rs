@@ -619,78 +619,29 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
         return as_ratio(a, c);
     }
 
-    let (primer_opt, clog) = x.as_other();
-    if let Some(primer) = primer_opt {
-        match primer {
-            protocol::Primer::Turn => {
-                swap(&mut a, &mut b);
-                swap(&mut c, &mut d);
-            },
-            protocol::Primer::Reflect => {
-                a = -a;
-                c = -c;
-            },
-            protocol::Primer::Ground => {
-                a = -a;
-                c = -c;
-                swap(&mut a, &mut b);
-                swap(&mut c, &mut d);
-            },
-        }
+    let (x_primer, x_clog) = x.unwrap_other();
+    match x_primer {
+        Some(protocol::Primer::Turn) => {
+            swap(&mut a, &mut b);
+            swap(&mut c, &mut d);
+        },
+        Some(protocol::Primer::Reflect) => {
+            a = -a;
+            c = -c;
+        },
+        Some(protocol::Primer::Ground) => {
+            a = -a;
+            c = -c;
+            swap(&mut a, &mut b);
+            swap(&mut c, &mut d);
+        },
+        None => {},
     }
-
-    fn compare(n1: isize, d1: isize, n2: isize, d2: isize) -> Ordering {
-        Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2))
+    let mut homographic = Homographic { x: x_clog, a: a, b: b, c: c, d: d };
+    match homographic.prime() {
+        Ok(primer) => (None, primer, None, Some(homographic)),
+        Err((primer, ratio)) => (None, primer, Some(ratio), None),
     }
-
-    fn lt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
-        compare(n1, d1, n2, d2) == Ordering::Less
-    }
-
-    fn gt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
-        compare(n1, d1, n2, d2) == Ordering::Greater
-    }
-
-    fn inside_domain(n: isize, d:isize) -> bool {
-        gt(n, d, 0, 1) && lt(n, d, 1, 1)
-    }
-
-    fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
-        if lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
-    }
-
-    fn is_primeable(a: isize, b: isize, c: isize, d: isize) -> Result<Option<protocol::Primer>, i32>
-    {
-        // zero
-        if inside_domain(-b, a) {
-            return Err(0);
-        }
-        // pole
-        if inside_domain(-d, c) {
-            return Err(0);
-        }
-        // image extremes
-        let (nmin, dmin, nmax, dmax) = sort(b, d, a.checked_add(b).unwrap(), c.checked_add(d).unwrap());
-        // try to classify image range
-        // FIXME: optimize comparisons
-        if lt(nmax, dmax, -1, 1) {
-            Ok(Some(protocol::Primer::Ground))
-        }
-        else if gt(nmin, dmin, -1, 1) && lt(nmax, dmax, 0, 1) {
-            Ok(Some(protocol::Primer::Reflect))
-        }
-        else if gt(nmin, dmin, 0, 1) && lt(nmax, dmax, 1, 1) {
-            Ok(None)
-        }
-        else if gt(nmin, dmin, 1, 1) {
-            Ok(Some(protocol::Primer::Turn))
-        }
-        else {
-            Err(0)
-        }
-    }
-
-    (Some(protocol::Special::Zero), None, None, None)
 }
 
 impl Homographic {
@@ -723,46 +674,78 @@ impl Homographic {
         if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
     }
 
+    fn final_value(&self) -> (isize, isize) {
+        if self.a % 2 != 0 || self.c % 2 != 0 {
+            (self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(), self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
+        }
+        else {
+            (self.b.checked_add(self.a / 2).unwrap(), self.d.checked_add(self.c / 2).unwrap())
+        }
+    }
+
+    fn amplify(&mut self) {
+        if self.a % 2 != 0 || self.c % 2 != 0 {
+            self.b = self.b.checked_mul(2).unwrap();
+            self.d = self.d.checked_mul(2).unwrap();
+        }
+        else {
+            self.a /= 2;
+            self.c /= 2;
+        }
+    }
+
+    fn uncover(&mut self) {
+        self.a = self.a.checked_add(self.b).unwrap();
+        self.c = self.c.checked_add(self.d).unwrap();
+        swap(&mut self.a, &mut self.b);
+        swap(&mut self.c, &mut self.d);
+    }
+
     fn ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
             None => {
-                let (num, den) = if self.a % 2 != 0 || self.c % 2 != 0 {
-                    (self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(), self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
-                }
-                else {
-                    (self.b.checked_add(self.a / 2).unwrap(), self.d.checked_add(self.c / 2).unwrap())
-                };
+                let (num, den) = self.final_value();
                 match ratio::new_i(num, den) {
                     (None, None, Some(ratio)) => Some(ratio),
                     _ => panic!("logic error"),
                 }
             },
             Some(protocol::Reduction::Amplify) => {
-                if self.a % 2 != 0 || self.c % 2 != 0 {
-                    self.b = self.b.checked_mul(2).unwrap();
-                    self.d = self.d.checked_mul(2).unwrap();
-                }
-                else {
-                    self.a /= 2;
-                    self.c /= 2;
-                }
+                self.amplify();
                 None
             },
             Some(protocol::Reduction::Uncover) => {
-                self.a = self.a.checked_add(self.b).unwrap();
-                self.c = self.c.checked_add(self.d).unwrap();
-                swap(&mut self.a, &mut self.b);
-                swap(&mut self.c, &mut self.d);
+                self.uncover();
                 None
             },
         }
     }
 
-    fn prime(&mut self) -> Result<Option<protocol::Primer>, Box<dyn Strategy>> {
+    fn primer_ingest(&mut self) -> Option<(Option<protocol::Primer>, Ratio)> {
+        match self.x.egest() {
+            None => {
+                let (num, den) = self.final_value();
+                match ratio::new_i(num, den) {
+                    (None, primer, Some(ratio)) => Some((primer, ratio)),
+                    _ => panic!("logic error"),
+                }
+            },
+            Some(protocol::Reduction::Amplify) => {
+                self.amplify();
+                None
+            },
+            Some(protocol::Reduction::Uncover) => {
+                self.uncover();
+                None
+            },
+        }
+    }
+
+    fn prime(&mut self) -> Result<Option<protocol::Primer>, (Option<protocol::Primer>, Ratio)> {
         // zero, pole
         if Homographic::inside_domain(-self.b, self.a) || Homographic::inside_domain(-self.d, self.c) {
-            match self.ingest() {
-                Some(ratio) => Err(Box::new(ratio)),
+            match self.primer_ingest() {
+                Some((primer, ratio)) => Err((primer, ratio)),
                 None => self.prime(),
             }
         }
@@ -784,8 +767,8 @@ impl Homographic {
                 Ok(Some(protocol::Primer::Turn))
             }
             else {
-                match self.ingest() {
-                    Some(ratio) => Err(Box::new(ratio)),
+                match self.primer_ingest() {
+                    Some((primer, ratio)) => Err((primer, ratio)),
                     None => self.prime(),
                 }
             }
