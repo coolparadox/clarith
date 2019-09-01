@@ -561,7 +561,7 @@ pub struct Homographic {
 pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
 
     fn as_ratio(n: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
-        let (special, primer, ratio) = ratio::new((n >= 0 && d >= 0) || (n < 0 && d < 0), if n >= 0 { n } else { -n } as usize, if d >= 0 { d } else { -d } as usize);
+        let (special, primer, ratio) = ratio::new_i(n, d);
         (special, primer, ratio, None)
     }
 
@@ -659,7 +659,8 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
         if lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
     }
 
-    fn is_primeable(a: isize, b: isize, c: isize, d: isize) -> Result<Option<protocol::Primer>, i32> {
+    fn is_primeable(a: isize, b: isize, c: isize, d: isize) -> Result<Option<protocol::Primer>, i32>
+    {
         // zero
         if inside_domain(-b, a) {
             return Err(0);
@@ -706,6 +707,14 @@ impl Homographic {
         Homographic::compare(n1, d1, n2, d2) == Ordering::Greater
     }
 
+    fn le(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
+        Homographic::compare(n1, d1, n2, d2) != Ordering::Greater
+    }
+
+    fn ge(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
+        Homographic::compare(n1, d1, n2, d2) != Ordering::Less
+    }
+
     fn inside_domain(n: isize, d:isize) -> bool {
         Homographic::gt(n, d, 0, 1) && Homographic::lt(n, d, 1, 1)
     }
@@ -713,7 +722,6 @@ impl Homographic {
     fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
         if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
     }
-
 
     fn ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
@@ -724,7 +732,7 @@ impl Homographic {
                 else {
                     (self.b.checked_add(self.a / 2).unwrap(), self.d.checked_add(self.c / 2).unwrap())
                 };
-                match ratio::new((num >= 0 && den >= 0) || (num < 0 && den < 0), if num >= 0 { num } else { -num } as usize, if den >= 0 { den } else { -den } as usize) {
+                match ratio::new_i(num, den) {
                     (None, None, Some(ratio)) => Some(ratio),
                     _ => panic!("logic error"),
                 }
@@ -750,6 +758,40 @@ impl Homographic {
         }
     }
 
+    fn prime(&mut self) -> Result<Option<protocol::Primer>, Box<dyn Strategy>> {
+        // zero, pole
+        if Homographic::inside_domain(-self.b, self.a) || Homographic::inside_domain(-self.d, self.c) {
+            match self.ingest() {
+                Some(ratio) => Err(Box::new(ratio)),
+                None => self.prime(),
+            }
+        }
+        else {
+            // image extremes
+            let (nmin, dmin, nmax, dmax) = Homographic::sort(self.b, self.d, self.a.checked_add(self.b).unwrap(), self.c.checked_add(self.d).unwrap());
+            // classify output
+            // FIXME: optimize comparisons?
+            if Homographic::lt(nmax, dmax, -1, 1) {
+                Ok(Some(protocol::Primer::Ground))
+            }
+            else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
+                Ok(Some(protocol::Primer::Reflect))
+            }
+            else if Homographic::gt(nmin, dmin, 0, 1) && Homographic::lt(nmax, dmax, 1, 1) {
+                Ok(None)
+            }
+            else if Homographic::gt(nmin, dmin, 1, 1) {
+                Ok(Some(protocol::Primer::Turn))
+            }
+            else {
+                match self.ingest() {
+                    Some(ratio) => Err(Box::new(ratio)),
+                    None => self.prime(),
+                }
+            }
+        }
+    }
+
 }
 
 impl Strategy for Homographic {
@@ -762,10 +804,20 @@ impl Strategy for Homographic {
                 None => self.egest(),
             }
         }
-        else
-        {
+        else {
             // image extremes
             let (nmin, dmin, nmax, dmax) = Homographic::sort(self.b, self.d, self.a.checked_add(self.b).unwrap(), self.c.checked_add(self.d).unwrap());
+            // FIXME: remove these sanity checks?
+            // FIXME: optimize comparison?
+            if Homographic::le(nmin, dmin, 0, 1) {
+                panic!("logic error");
+            }
+            // FIXME: optimize comparison?
+            if Homographic::ge(nmax, dmax, 1, 1) {
+                panic!("logic error");
+            }
+            // classify output
+            // FIXME: optimize comparison?
             if Homographic::lt(nmax, dmax, 1, 2) {
                 if self.c % 2 != 0 || self.d % 2 != 0 {
                     self.a = self.a.checked_mul(2).unwrap();
@@ -777,9 +829,19 @@ impl Strategy for Homographic {
                 }
                 Ok(Some(protocol::Reduction::Amplify))
             }
-            ... else if ...
+            // FIXME: optimize comparison?
+            else if Homographic::gt(nmin, dmin, 1, 2) {
+                self.c = self.c.checked_sub(self.a).unwrap();
+                self.d = self.d.checked_sub(self.b).unwrap();
+                swap(&mut self.a, &mut self.c);
+                swap(&mut self.b, &mut self.d);
+                Ok(Some(protocol::Reduction::Uncover))
+            }
             else {
-                Ok(None)
+                match self.ingest() {
+                    Some(ratio) => Err(Box::new(ratio)),
+                    None => self.egest(),
+                }
             }
         }
     }

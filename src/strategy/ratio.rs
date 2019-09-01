@@ -191,7 +191,7 @@ pub struct Ratio {
     den: usize,
 }
 
-pub fn new(positive: bool, num: usize, den:usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
+pub fn new(positive: bool, num: usize, den: usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
     if num == 0 && den == 0 {
         panic!("undefined ratio");
     }
@@ -215,6 +215,10 @@ pub fn new(positive: bool, num: usize, den:usize) -> (Option<protocol::Special>,
         return (None, if positive { Some(protocol::Primer::Turn) } else { Some(protocol::Primer::Ground) }, Some(Ratio {num: den, den: num}));
     }
     return (None, if positive { None } else { Some(protocol::Primer::Reflect) }, Some(Ratio {num: num, den: den}));
+}
+
+pub fn new_i(num: isize, den: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
+    new((num >= 0 && den >= 0) || (num < 0 && den < 0), if num >= 0 { num } else { -num } as usize, if den >= 0 { den } else { -den } as usize)
 }
 
 impl Strategy for Ratio {
