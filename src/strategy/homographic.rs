@@ -637,14 +637,77 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
         },
         None => {},
     }
-    let mut homographic = Homographic { x: x_clog, a: a, b: b, c: c, d: d };
-    match homographic.prime() {
-        Ok(primer) => (None, primer, None, Some(homographic)),
-        Err((primer, ratio)) => (None, primer, Some(ratio), None),
-    }
+    Homographic::new(x_clog, a, b, c, d)
 }
 
 impl Homographic {
+
+    fn new(x: Clog, a: isize, b: isize, c: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+        (Homographic { x, a, b, c, d }).prime()
+    }
+
+    fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+
+        if self.are_all_singularities_outside_domain() {
+            if let Ok(primer) = self.classify_image() {
+                return (None, primer, None, Some(self));
+            }
+        }
+        match self.prime_ingest() {
+            Some((special, primer, ratio)) => (special, primer, ratio, None),
+            None => self.prime(),
+        }
+    }
+
+    fn prime_ingest(&mut self) -> Option<(Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>)> {
+        match self.x.egest() {
+            None => {
+                let (num, den) = self.value_at_one_half();
+                Some(ratio::new_i(num, den))
+            },
+            Some(protocol::Reduction::Amplify) => {
+                self.amplify();
+                None
+            },
+            Some(protocol::Reduction::Uncover) => {
+                self.uncover();
+                None
+            },
+        }
+    }
+
+    fn classify_image(&self) -> Result<Option<protocol::Primer>, isize> {
+        let (nmin, dmin, nmax, dmax) = self.image_extremes();
+        // FIXME: optimize comparisons
+        if Homographic::lt(nmax, dmax, -1, 1) {
+            Ok(Some(protocol::Primer::Ground))
+        }
+        else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
+            Ok(Some(protocol::Primer::Reflect))
+        }
+        else if Homographic::gt(nmin, dmin, 0, 1) && Homographic::lt(nmax, dmax, 1, 1) {
+            Ok(None)
+        }
+        else if Homographic::gt(nmin, dmin, 1, 1) {
+            Ok(Some(protocol::Primer::Turn))
+        }
+        else {
+            Err(0)
+        }
+    }
+
+    fn image_extremes(&self) -> (isize, isize, isize, isize) {
+        let (n0, d0) = self.value_at_zero();
+        let (n1, d1) = self.value_at_one();
+        if n1 == 0 && d1 == 0 {
+            return (n0, d0, n0, d0);
+        }
+        Homographic::sort(n0, d0, n1, d1)
+    }
+
+    fn are_all_singularities_outside_domain(&self) -> bool {
+        (!self.has_zero() || self.is_zero_outside_domain()) && (!self.has_pole() || self.is_pole_outside_domain())
+    }
 
     fn compare(n1: isize, d1: isize, n2: isize, d2: isize) -> Ordering {
         Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2))
@@ -674,7 +737,7 @@ impl Homographic {
         if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
     }
 
-    fn final_value(&self) -> (isize, isize) {
+    fn value_at_one_half(&self) -> (isize, isize) {
         if self.a % 2 != 0 || self.c % 2 != 0 {
             (self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(), self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
         }
@@ -718,60 +781,6 @@ impl Homographic {
                 self.uncover();
                 None
             },
-        }
-    }
-
-    fn primer_ingest(&mut self) -> Option<(Option<protocol::Primer>, Ratio)> {
-        match self.x.egest() {
-            None => {
-                let (num, den) = self.final_value();
-                match ratio::new_i(num, den) {
-                    (None, primer, Some(ratio)) => Some((primer, ratio)),
-                    _ => panic!("logic error"),
-                }
-            },
-            Some(protocol::Reduction::Amplify) => {
-                self.amplify();
-                None
-            },
-            Some(protocol::Reduction::Uncover) => {
-                self.uncover();
-                None
-            },
-        }
-    }
-
-    fn prime(&mut self) -> Result<Option<protocol::Primer>, (Option<protocol::Primer>, Ratio)> {
-        // zero, pole
-        if Homographic::inside_domain(-self.b, self.a) || Homographic::inside_domain(-self.d, self.c) {
-            match self.primer_ingest() {
-                Some((primer, ratio)) => Err((primer, ratio)),
-                None => self.prime(),
-            }
-        }
-        else {
-            // image extremes
-            let (nmin, dmin, nmax, dmax) = Homographic::sort(self.b, self.d, self.a.checked_add(self.b).unwrap(), self.c.checked_add(self.d).unwrap());
-            // classify output
-            // FIXME: optimize comparisons?
-            if Homographic::lt(nmax, dmax, -1, 1) {
-                Ok(Some(protocol::Primer::Ground))
-            }
-            else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
-                Ok(Some(protocol::Primer::Reflect))
-            }
-            else if Homographic::gt(nmin, dmin, 0, 1) && Homographic::lt(nmax, dmax, 1, 1) {
-                Ok(None)
-            }
-            else if Homographic::gt(nmin, dmin, 1, 1) {
-                Ok(Some(protocol::Primer::Turn))
-            }
-            else {
-                match self.primer_ingest() {
-                    Some((primer, ratio)) => Err((primer, ratio)),
-                    None => self.prime(),
-                }
-            }
         }
     }
 

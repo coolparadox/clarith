@@ -97,13 +97,15 @@ impl Number {
     pub fn homographic(x: Number, a: isize, b: isize, c: isize, d: isize) -> Number {
         let (special, primer, ratio, homographic) = strategy::homographic::new(x, a, b, c, d);
         if let Some(fixed) = special {
-            return Number::Special(fixed);
+            Number::Special(fixed)
         }
-        if let Some(ratio) = ratio
+        else if let Some(ratio) = ratio
         {
-            return Number::Other(primer, Clog{strategy: Box::new(ratio)})
+            Number::Other(primer, Clog{strategy: Box::new(ratio)})
         }
-        Number::Other(primer, Clog{strategy: Box::new(homographic.unwrap())})
+        else {
+            Number::Other(primer, Clog{strategy: Box::new(homographic.unwrap())})
+        }
     }
 
 }
