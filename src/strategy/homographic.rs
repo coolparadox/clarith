@@ -231,19 +231,19 @@ mod tests {
     fn t_0011() {
         fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 1) }
         fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
-        // t(neg_inf(), zero());
+        t(neg_inf(), zero());
         t(neg_two(), zero());
-        // // t(neg_one(), zero());
-        // t(neg_two_thirds(), zero());
-        // t(neg_one_half(), zero());
-        // t(neg_one_fourth(), zero());
-        // t(zero(), zero());
-        // t(one_fourth(), zero());
-        // t(one_half(), zero());
-        // t(two_thirds(), zero());
-        // t(one(), zero());
-        // t(two(), zero());
-        // t(inf(), zero());
+        // t(neg_one(), zero());
+        t(neg_two_thirds(), zero());
+        t(neg_one_half(), zero());
+        t(neg_one_fourth(), zero());
+        t(zero(), zero());
+        t(one_fourth(), zero());
+        t(one_half(), zero());
+        t(two_thirds(), zero());
+        t(one(), zero());
+        t(two(), zero());
+        t(inf(), zero());
     }
 
     #[test]
@@ -653,37 +653,54 @@ impl Homographic {
                 Some(ratio::new_i(num, den))
             },
             Some(protocol::Reduction::Amplify) => {
-                self.amplify();
+                self.ingest_amplify();
                 None
             },
             Some(protocol::Reduction::Uncover) => {
-                self.uncover();
+                self.ingest_uncover();
                 None
             },
         }
     }
 
-    fn prime_egest(&self) -> Result<Option<protocol::Primer>, isize> {
+    fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
         // FIXME: optimize comparisons
         if Homographic::lt(nmax, dmax, -1, 1) {
-            // FIXME: egest primer
-            Ok(Some(protocol::Primer::Ground))
+            Ok(Some(self.ground()))
         }
         else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
-            // FIXME: egest primer
-            Ok(Some(protocol::Primer::Reflect))
+            Ok(Some(self.reflect()))
         }
         else if Homographic::gt(nmin, dmin, 0, 1) && Homographic::lt(nmax, dmax, 1, 1) {
             Ok(None)
         }
         else if Homographic::gt(nmin, dmin, 1, 1) {
-            // FIXME: egest primer
-            Ok(Some(protocol::Primer::Turn))
+            Ok(Some(self.turn()))
         }
         else {
             Err(0)
         }
+    }
+
+    fn ground(&mut self) -> protocol::Primer {
+        self.c = -self.c;
+        self.d = -self.d;
+        swap(&mut self.a, &mut self.c);
+        swap(&mut self.b, &mut self.d);
+        protocol::Primer::Ground
+    }
+
+    fn reflect(&mut self) -> protocol::Primer {
+        self.a = -self.a;
+        self.b = -self.b;
+        protocol::Primer::Reflect
+    }
+
+    fn turn(&mut self) -> protocol::Primer {
+        swap(&mut self.a, &mut self.c);
+        swap(&mut self.b, &mut self.d);
+        protocol::Primer::Turn
     }
 
     fn image_extremes(&self) -> (isize, isize, isize, isize) {
@@ -760,7 +777,7 @@ impl Homographic {
         }
     }
 
-    fn amplify(&mut self) {
+    fn ingest_amplify(&mut self) {
         if self.a % 2 != 0 || self.c % 2 != 0 {
             self.b = self.b.checked_mul(2).unwrap();
             self.d = self.d.checked_mul(2).unwrap();
@@ -771,14 +788,14 @@ impl Homographic {
         }
     }
 
-    fn uncover(&mut self) {
+    fn ingest_uncover(&mut self) {
         self.a = self.a.checked_add(self.b).unwrap();
         self.c = self.c.checked_add(self.d).unwrap();
         swap(&mut self.a, &mut self.b);
         swap(&mut self.c, &mut self.d);
     }
 
-    fn ingest(&mut self) -> Option<Ratio> {
+    fn reduction_ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
             None => {
                 let (num, den) = self.value_at_one_half();
@@ -788,11 +805,11 @@ impl Homographic {
                 }
             },
             Some(protocol::Reduction::Amplify) => {
-                self.amplify();
+                self.ingest_amplify();
                 None
             },
             Some(protocol::Reduction::Uncover) => {
-                self.uncover();
+                self.ingest_uncover();
                 None
             },
         }
@@ -801,7 +818,7 @@ impl Homographic {
     fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
 
         if self.are_all_singularities_outside_domain() {
-            if let Ok(primer) = self.prime_egest() {
+            if let Ok(primer) = self.primer_egest() {
                 return (None, primer, None, Some(self));
             }
         }
@@ -809,6 +826,47 @@ impl Homographic {
             Some((special, primer, ratio)) => (special, primer, ratio, None),
             None => self.prime(),
         }
+    }
+
+    fn reduction_egest(&mut self) -> Result<Option<protocol::Reduction>, isize> {
+        let (nmin, dmin, nmax, dmax) = self.image_extremes();
+        // FIXME: optimize comparisons
+        // FIXME: remove sanity checks?
+        if Homographic::le(nmin, dmin, 0, 1) {
+            panic!("logic error");
+        }
+        if Homographic::ge(nmax, dmax, 1, 1) {
+            panic!("logic error");
+        }
+        if Homographic::lt(nmax, dmax, 1, 2) {
+            Ok(Some(self.amplify()))
+        }
+        else if Homographic::gt(nmin, dmin, 1, 2) {
+            Ok(Some(self.uncover()))
+        }
+        else {
+            Err(0)
+        }
+    }
+
+    fn uncover(&mut self) -> protocol::Reduction {
+        self.c = self.c.checked_sub(self.a).unwrap();
+        self.d = self.d.checked_sub(self.b).unwrap();
+        swap(&mut self.a, &mut self.c);
+        swap(&mut self.b, &mut self.d);
+        protocol::Reduction::Uncover
+    }
+
+    fn amplify(&mut self) -> protocol::Reduction {
+        if self.c % 2 != 0 || self.d % 2 != 0 {
+            self.a = self.a.checked_mul(2).unwrap();
+            self.b = self.b.checked_mul(2).unwrap();
+        }
+        else {
+            self.c /= 2;
+            self.d /= 2;
+        }
+        protocol::Reduction::Amplify
     }
 
 }
@@ -818,64 +876,13 @@ impl Strategy for Homographic {
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
 
         if self.are_all_singularities_outside_domain() {
-            ...
-            if let Ok(egestion) = self.prime_egest() {
-                return (None, primer, None, Some(self));
+            if let Ok(reduction) = self.reduction_egest() {
+                return Ok(reduction);
             }
         }
-        match self.prime_ingest() {
-            Some((special, primer, ratio)) => (special, primer, ratio, None),
-            None => self.prime(),
-        }
-    }
-
-     ...
-        // zero, pole
-        if Homographic::inside_domain(-self.b, self.a) || Homographic::inside_domain(-self.d, self.c) {
-            match self.ingest() {
-                Some(ratio) => Err(Box::new(ratio)),
-                None => self.egest(),
-            }
-        }
-        else {
-            // image extremes
-            let (nmin, dmin, nmax, dmax) = Homographic::sort(self.b, self.d, self.a.checked_add(self.b).unwrap(), self.c.checked_add(self.d).unwrap());
-            // FIXME: remove these sanity checks?
-            // FIXME: optimize comparison?
-            if Homographic::le(nmin, dmin, 0, 1) {
-                panic!("logic error");
-            }
-            // FIXME: optimize comparison?
-            if Homographic::ge(nmax, dmax, 1, 1) {
-                panic!("logic error");
-            }
-            // classify output
-            // FIXME: optimize comparison?
-            if Homographic::lt(nmax, dmax, 1, 2) {
-                if self.c % 2 != 0 || self.d % 2 != 0 {
-                    self.a = self.a.checked_mul(2).unwrap();
-                    self.b = self.b.checked_mul(2).unwrap();
-                }
-                else {
-                    self.c /= 2;
-                    self.d /= 2;
-                }
-                Ok(Some(protocol::Reduction::Amplify))
-            }
-            // FIXME: optimize comparison?
-            else if Homographic::gt(nmin, dmin, 1, 2) {
-                self.c = self.c.checked_sub(self.a).unwrap();
-                self.d = self.d.checked_sub(self.b).unwrap();
-                swap(&mut self.a, &mut self.c);
-                swap(&mut self.b, &mut self.d);
-                Ok(Some(protocol::Reduction::Uncover))
-            }
-            else {
-                match self.ingest() {
-                    Some(ratio) => Err(Box::new(ratio)),
-                    None => self.egest(),
-                }
-            }
+        match self.reduction_ingest() {
+            Some(ratio) => Err(Box::new(ratio)),
+            None => self.egest(),
         }
     }
 
