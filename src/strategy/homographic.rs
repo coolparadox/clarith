@@ -646,19 +646,6 @@ impl Homographic {
         (Homographic { x, a, b, c, d }).prime()
     }
 
-    fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
-
-        if self.are_all_singularities_outside_domain() {
-            if let Ok(primer) = self.classify_image() {
-                return (None, primer, None, Some(self));
-            }
-        }
-        match self.prime_ingest() {
-            Some((special, primer, ratio)) => (special, primer, ratio, None),
-            None => self.prime(),
-        }
-    }
-
     fn prime_ingest(&mut self) -> Option<(Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>)> {
         match self.x.egest() {
             None => {
@@ -676,19 +663,22 @@ impl Homographic {
         }
     }
 
-    fn classify_image(&self) -> Result<Option<protocol::Primer>, isize> {
+    fn prime_egest(&self) -> Result<Option<protocol::Primer>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
         // FIXME: optimize comparisons
         if Homographic::lt(nmax, dmax, -1, 1) {
+            // FIXME: egest primer
             Ok(Some(protocol::Primer::Ground))
         }
         else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
+            // FIXME: egest primer
             Ok(Some(protocol::Primer::Reflect))
         }
         else if Homographic::gt(nmin, dmin, 0, 1) && Homographic::lt(nmax, dmax, 1, 1) {
             Ok(None)
         }
         else if Homographic::gt(nmin, dmin, 1, 1) {
+            // FIXME: egest primer
             Ok(Some(protocol::Primer::Turn))
         }
         else {
@@ -737,6 +727,30 @@ impl Homographic {
         if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
     }
 
+    fn is_pole_outside_domain(&self) -> bool {
+        !Homographic::inside_domain(-self.d, self.c)
+    }
+
+    fn is_zero_outside_domain(&self) -> bool {
+        !Homographic::inside_domain(-self.b, self.a)
+    }
+
+    fn has_pole(&self) -> bool {
+        self.c != 0 || self.d != 0
+    }
+
+    fn has_zero(&self) -> bool {
+        self.a != 0 || self.b != 0
+    }
+
+    fn value_at_one(&self) -> (isize, isize) {
+        (self.b.checked_add(self.a).unwrap(), self.d.checked_add(self.c).unwrap())
+    }
+
+    fn value_at_zero(&self) -> (isize, isize) {
+        (self.b, self.d)
+    }
+
     fn value_at_one_half(&self) -> (isize, isize) {
         if self.a % 2 != 0 || self.c % 2 != 0 {
             (self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(), self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
@@ -767,7 +781,7 @@ impl Homographic {
     fn ingest(&mut self) -> Option<Ratio> {
         match self.x.egest() {
             None => {
-                let (num, den) = self.final_value();
+                let (num, den) = self.value_at_one_half();
                 match ratio::new_i(num, den) {
                     (None, None, Some(ratio)) => Some(ratio),
                     _ => panic!("logic error"),
@@ -784,11 +798,38 @@ impl Homographic {
         }
     }
 
+    fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+
+        if self.are_all_singularities_outside_domain() {
+            if let Ok(primer) = self.prime_egest() {
+                return (None, primer, None, Some(self));
+            }
+        }
+        match self.prime_ingest() {
+            Some((special, primer, ratio)) => (special, primer, ratio, None),
+            None => self.prime(),
+        }
+    }
+
 }
 
 impl Strategy for Homographic {
 
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
+
+        if self.are_all_singularities_outside_domain() {
+            ...
+            if let Ok(egestion) = self.prime_egest() {
+                return (None, primer, None, Some(self));
+            }
+        }
+        match self.prime_ingest() {
+            Some((special, primer, ratio)) => (special, primer, ratio, None),
+            None => self.prime(),
+        }
+    }
+
+     ...
         // zero, pole
         if Homographic::inside_domain(-self.b, self.a) || Homographic::inside_domain(-self.d, self.c) {
             match self.ingest() {
