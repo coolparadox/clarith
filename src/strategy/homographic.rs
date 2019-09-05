@@ -231,24 +231,24 @@ mod tests {
     fn t_0011() {
         fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 1) }
         fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
-        t(neg_inf(), zero());
-        t(neg_two(), zero());
-        // t(neg_one(), zero());
+        // t(neg_inf(), zero());
+        // t(neg_two(), zero());
+        // // t(neg_one(), zero());
         t(neg_two_thirds(), zero());
-        t(neg_one_half(), zero());
-        t(neg_one_fourth(), zero());
-        t(zero(), zero());
-        t(one_fourth(), zero());
-        t(one_half(), zero());
-        t(two_thirds(), zero());
-        t(one(), zero());
-        t(two(), zero());
-        t(inf(), zero());
+        // t(neg_one_half(), zero());
+        // t(neg_one_fourth(), zero());
+        // t(zero(), zero());
+        // t(one_fourth(), zero());
+        // t(one_half(), zero());
+        // t(two_thirds(), zero());
+        // t(one(), zero());
+        // t(two(), zero());
+        // t(inf(), zero());
     }
 
     #[test]
     #[should_panic(expected = "undefined ratio")]
-    fn t_0011_panic() {
+    fn p_0011() {
         fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 1) }
         h(neg_one());
     }
@@ -274,7 +274,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "undefined ratio")]
-    fn t_0010_panic() {
+    fn p_0010() {
         fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 0) }
         h(zero());
     }
@@ -306,7 +306,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "undefined ratio")]
-    fn t_0021_panic() {
+    fn p_0021() {
         fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 2, 1) }
         h(neg_one_half());
     }
@@ -541,7 +541,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "undefined ratio")]
-    fn t_6342_panic() {
+    fn p_6342() {
         fn h(x: Number) -> Number { Number::homographic(x, 6, 3, 4, 2) }
         h(neg_one_half());
     }
