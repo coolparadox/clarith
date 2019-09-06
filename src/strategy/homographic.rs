@@ -234,9 +234,9 @@ mod tests {
         // t(neg_inf(), zero());
         // t(neg_two(), zero());
         // // t(neg_one(), zero());
-        t(neg_two_thirds(), zero());
+        // t(neg_two_thirds(), zero());
         // t(neg_one_half(), zero());
-        // t(neg_one_fourth(), zero());
+        t(neg_one_fourth(), zero());
         // t(zero(), zero());
         // t(one_fourth(), zero());
         // t(one_half(), zero());
@@ -706,10 +706,19 @@ impl Homographic {
     fn image_extremes(&self) -> (isize, isize, isize, isize) {
         let (n0, d0) = self.value_at_zero();
         let (n1, d1) = self.value_at_one();
-        if n1 == 0 && d1 == 0 {
-            return (n0, d0, n0, d0);
+        if !Homographic::valid_ratio(n0, d0) {
+            (n1, d1, n1, d1)
         }
-        Homographic::sort(n0, d0, n1, d1)
+        else if !Homographic::valid_ratio(n1, d1) {
+            (n0, d0, n0, d0)
+        }
+        else {
+            Homographic::sort(n0, d0, n1, d1)
+        }
+    }
+
+    fn valid_ratio(n: isize, d: isize) -> bool {
+        n != 0 || d != 0
     }
 
     fn are_all_singularities_outside_domain(&self) -> bool {
@@ -753,11 +762,11 @@ impl Homographic {
     }
 
     fn has_pole(&self) -> bool {
-        self.c != 0 || self.d != 0
+        Homographic::valid_ratio(self.c, self.d)
     }
 
     fn has_zero(&self) -> bool {
-        self.a != 0 || self.b != 0
+        Homographic::valid_ratio(self.a, self.b)
     }
 
     fn value_at_one(&self) -> (isize, isize) {
