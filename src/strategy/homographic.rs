@@ -623,10 +623,6 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
         }
     }
 
-    if b == 0 && d == 0 {
-        return as_ratio(a, c);
-    }
-
     let (x_primer, x_clog) = x.unwrap_other();
     match x_primer {
         Some(protocol::Primer::Turn) => {
