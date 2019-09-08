@@ -43,31 +43,23 @@ fn reference_compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize)
 #[test]
 fn compare_ratios() {
     let range = 25;
-    let mut n1 = -range;
-    while n1 <= range {
-        let mut d1 = -range;
-        while d1 <= range {
-            let mut n2 = -range;
-            while n2 <= range {
-                let mut d2 = -range;
-                while d2 <= range {
+    for n1 in -range..range {
+        for d1 in -range..range {
+            if n1 == 0 && d1 == 0 {
+                continue;
+            }
+            for n2 in -range..range {
+                for d2 in -range..range {
+                    if n2 == 0 && d2 == 0 {
+                        continue;
+                    }
                     assert_eq!(
                         Number::compare(
                             Number::ratio(n1, d1),
                             Number::ratio(n2, d2)),
                         reference_compare(n1, d1, n2, d2));
-                    d2 += 1;
-                    if n2 == 0 && d2 == 0 {
-                        d2 += 1;
-                    }
                 }
-                n2 += 1;
-            }
-            d1 += 1;
-            if n1 == 0 && d1 == 0 {
-                d1 += 1;
             }
         }
-        n1 += 1;
     }
 }
