@@ -231,19 +231,19 @@ mod tests {
     fn t_0011() {
         fn h(x: Number) -> Number { Number::homographic(x, 0, 0, 1, 1) }
         fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
-        // t(neg_inf(), zero());
-        // t(neg_two(), zero());
-        // // t(neg_one(), zero());
-        // t(neg_two_thirds(), zero());
-        // t(neg_one_half(), zero());
+        t(neg_inf(), zero());
+        t(neg_two(), zero());
+        // t(neg_one(), zero());
+        t(neg_two_thirds(), zero());
+        t(neg_one_half(), zero());
         t(neg_one_fourth(), zero());
-        // t(zero(), zero());
-        // t(one_fourth(), zero());
-        // t(one_half(), zero());
-        // t(two_thirds(), zero());
-        // t(one(), zero());
-        // t(two(), zero());
-        // t(inf(), zero());
+        t(zero(), zero());
+        t(one_fourth(), zero());
+        t(one_half(), zero());
+        t(two_thirds(), zero());
+        t(one(), zero());
+        t(two(), zero());
+        t(inf(), zero());
     }
 
     #[test]
@@ -750,7 +750,7 @@ impl Homographic {
     }
 
     fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
-        if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, n1) }
+        if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, d1) }
     }
 
     fn is_pole_outside_domain(&self) -> bool {
