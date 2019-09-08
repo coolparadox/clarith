@@ -746,7 +746,7 @@ impl Homographic {
     }
 
     fn inside_domain(n: isize, d:isize) -> bool {
-        Homographic::gt(n, d, 0, 1) && Homographic::lt(n, d, 1, 1)
+        Homographic::ge(n, d, 0, 1) && Homographic::le(n, d, 1, 1)
     }
 
     fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
