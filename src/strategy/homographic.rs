@@ -141,7 +141,7 @@ mod tests {
         t(neg_one(), zero());
         t(neg_two_thirds(), Number::ratio(1, 3));
         t(neg_one_half(), one_half());
-        t(neg_one_fourth(), Number::ratio(-3, 4));
+        t(neg_one_fourth(), Number::ratio(3, 4));
         t(zero(), one());
         t(one_fourth(), Number::ratio(5, 4));
         t(one_half(), Number::ratio(3, 2));
