@@ -100,7 +100,7 @@ mod tests {
         fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
         t(neg_inf(), one());
         t(neg_two(), one());
-        t(neg_one(), one());
+        // t(neg_one(), one());
         t(neg_two_thirds(), one());
         t(neg_one_half(), one());
         t(neg_one_fourth(), one());
@@ -111,6 +111,14 @@ mod tests {
         t(one(), one());
         t(two(), one());
         t(inf(), one());
+    }
+
+    #[test]
+    #[should_panic(expected = "undefined ratio")]
+    fn p_1111() {
+        fn h(x: Number) -> Number { Number::homographic(x, 1, 1, 1, 1) }
+        fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
+        t(neg_one(), one());
     }
 
     #[test]
