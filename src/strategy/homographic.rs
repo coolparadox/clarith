@@ -729,8 +729,8 @@ impl Homographic {
         n != 0 || d != 0
     }
 
-    fn are_all_singularities_outside_domain(&self) -> bool {
-        (!self.has_zero() || self.is_zero_outside_domain()) && (!self.has_pole() || self.is_pole_outside_domain())
+    fn are_both_singularities_outside_domain(&self) -> bool {
+        self.has_zero() && self.has_pole() && self.is_zero_outside_domain() && self.is_pole_outside_domain()
     }
 
     fn compare(n1: isize, d1: isize, n2: isize, d2: isize) -> Ordering {
@@ -834,7 +834,7 @@ impl Homographic {
 
     fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
 
-        if self.are_all_singularities_outside_domain() {
+        if self.are_both_singularities_outside_domain() {
             if let Ok(primer) = self.primer_egest() {
                 return (None, primer, None, Some(self));
             }
@@ -892,7 +892,7 @@ impl Strategy for Homographic {
 
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
 
-        if self.are_all_singularities_outside_domain() {
+        if self.are_both_singularities_outside_domain() {
             if let Ok(reduction) = self.reduction_egest() {
                 return Ok(reduction);
             }
