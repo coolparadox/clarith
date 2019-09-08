@@ -437,19 +437,19 @@ mod tests {
     fn t_npnp() {
         fn h(x: Number) -> Number { Number::homographic(x, -2, 3, -4, 5) }
         fn t(n1: Number, n2: Number) { assert_eq(h(n1), n2) }
-        t(neg_inf(), Number::ratio(-1, 2));
-        t(neg_two(), Number::ratio(-7, 13));
-        t(neg_one(), Number::ratio(-5, 9));
-        t(neg_two_thirds(), Number::ratio(-13, 23));
-        t(neg_one_half(), Number::ratio(-4, 7));
-        t(neg_one_fourth(), Number::ratio(-7, 12));
-        t(zero(), Number::ratio(-3, 5));
-        t(one_fourth(), Number::ratio(-5, 8));
-        t(one_half(), Number::ratio(-2, 3));
-        t(two_thirds(), Number::ratio(-5, 7));
-        t(one(), Number::ratio(-1, 1));
-        t(two(), Number::ratio(-1, 3));
-        t(inf(), Number::ratio(-1, 2));
+        t(neg_inf(), Number::ratio(1, 2));
+        t(neg_two(), Number::ratio(7, 13));
+        t(neg_one(), Number::ratio(5, 9));
+        t(neg_two_thirds(), Number::ratio(13, 23));
+        t(neg_one_half(), Number::ratio(4, 7));
+        t(neg_one_fourth(), Number::ratio(7, 12));
+        t(zero(), Number::ratio(3, 5));
+        t(one_fourth(), Number::ratio(5, 8));
+        t(one_half(), Number::ratio(2, 3));
+        t(two_thirds(), Number::ratio(5, 7));
+        t(one(), Number::ratio(1, 1));
+        t(two(), Number::ratio(1, 3));
+        t(inf(), Number::ratio(1, 2));
     }
 
     #[test]
