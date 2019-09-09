@@ -783,20 +783,8 @@ impl Homographic {
         Homographic::compare(n1, d1, n2, d2) == Ordering::Less
     }
 
-    fn gt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
-        Homographic::compare(n1, d1, n2, d2) == Ordering::Greater
-    }
-
-    fn le(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
-        Homographic::compare(n1, d1, n2, d2) != Ordering::Greater
-    }
-
-    fn ge(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
-        Homographic::compare(n1, d1, n2, d2) != Ordering::Less
-    }
-
     fn inside_domain(n: isize, d:isize) -> bool {
-        Homographic::ge(n, d, 0, 1) && Homographic::le(n, d, 1, 1)
+        !Homographic::less_than_zero(n, d) && !Homographic::greater_than_one(n, d)
     }
 
     fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
@@ -889,23 +877,40 @@ impl Homographic {
 
     fn reduction_egest(&mut self) -> Result<Option<protocol::Reduction>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
-        // FIXME: optimize comparisons
         // FIXME: remove sanity checks?
-        if Homographic::le(nmin, dmin, 0, 1) {
+        if Homographic::not_greater_than_zero(nmin, dmin) {
             panic!("logic error");
         }
-        if Homographic::ge(nmax, dmax, 1, 1) {
+        if Homographic::not_less_than_one(nmax, dmax) {
             panic!("logic error");
         }
-        if Homographic::lt(nmax, dmax, 1, 2) {
+        if Homographic::less_than_one_half(nmax, dmax) {
             Ok(Some(self.amplify()))
         }
-        else if Homographic::gt(nmin, dmin, 1, 2) {
+        else if Homographic::greater_than_one_half(nmin, dmin) {
             Ok(Some(self.uncover()))
         }
         else {
             Err(0)
         }
+    }
+
+    fn greater_than_one_half(mut n: isize, mut d:isize) -> bool {
+        if d % 2 == 0 { d /= 2; } else { n = n.checked_mul(2).unwrap(); }
+        if d > 0 { n > d } else if d < 0 { n < d } else { n > 0 }
+    }
+
+    fn less_than_one_half(mut n: isize, mut d:isize) -> bool {
+        if d % 2 == 0 { d /= 2; } else { n = n.checked_mul(2).unwrap(); }
+        if d > 0 { n < d } else if d < 0 { n > d } else { n < 0 }
+    }
+
+    fn not_less_than_one(n: isize, d:isize) -> bool {
+        if d > 0 { n >= d } else if d < 0 { n <= d } else { n > 0 }
+    }
+
+    fn not_greater_than_zero(n: isize, d:isize) -> bool {
+        if d > 0 { n <= 0 } else if d < 0 { n >= 0 } else { n < 0 }
     }
 
     fn uncover(&mut self) -> protocol::Reduction {
