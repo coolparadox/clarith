@@ -670,7 +670,7 @@ impl Homographic {
     fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
         // FIXME: optimize comparisons
-        if Homographic::lt(nmax, dmax, -1, 1) {
+        if Homographic::less_than_minus_one(nmax, dmax) {
             Ok(Some(self.ground()))
         }
         else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
@@ -685,6 +685,10 @@ impl Homographic {
         else {
             Err(0)
         }
+    }
+
+    fn less_than_minus_one(n: isize, d:isize) -> bool {
+        Homographic::lt(n, d, -1, 1)
     }
 
     fn ground(&mut self) -> protocol::Primer {
@@ -729,8 +733,31 @@ impl Homographic {
         self.has_zero() && self.has_pole() && self.is_zero_outside_domain() && self.is_pole_outside_domain()
     }
 
-    fn compare(n1: isize, d1: isize, n2: isize, d2: isize) -> Ordering {
-        Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2))
+    fn compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize) -> Ordering {
+        if d1 == 0 {
+            n1 = n1.signum();
+        }
+        else if d1 < 0 {
+            n1 = -n1;
+            d1 = -d1;
+        }
+        if d2 == 0 {
+            n2 = n2.signum();
+        }
+        else if d2 < 0 {
+            n2 = -n2;
+            d2 = -d2;
+        }
+        let (on1d2, on2d1) = if d1 != 0 || d2 != 0 {
+            (n1.checked_mul(d2), n2.checked_mul(d1))
+        }
+        else {
+            (Some(n1), Some(n2))
+        };
+        match (on1d2, on2d1) {
+            (Some(n1d2), Some(n2d1)) => n1d2.cmp(&n2d1),
+            _ => Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2)),
+        }
     }
 
     fn lt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
