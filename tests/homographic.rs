@@ -35,7 +35,7 @@ fn result_ratio(a: isize, b: isize, c: isize, d: isize, mut xn: isize, mut xd: i
 
 #[test]
 fn compare_homographics() {
-    let range = 5;
+    let range = 6;
     for a in -range..range {
         for b in -range..range {
             for c in -range..range {

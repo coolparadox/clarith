@@ -746,7 +746,10 @@ impl Homographic {
             (n0, d0, n0, d0)
         }
         else {
-            Homographic::sort(n0, d0, n1, d1)
+            match (self.a.checked_mul(self.d), self.c.checked_mul(self.b)) {
+                (Some(ad), Some(bc)) => if ad >= bc { (n0, d0, n1, d1) } else { (n1, d1, n0, d0) },
+                _ => if Number::compare(Number::ratio(n0, d0), Number::ratio(n1, d1)) == Ordering::Less { (n0, d0, n1, d1) } else { (n1, d1, n0, d0) },
+            }
         }
     }
 
@@ -758,37 +761,8 @@ impl Homographic {
         self.has_zero() && self.has_pole() && self.is_zero_outside_domain() && self.is_pole_outside_domain()
     }
 
-    fn compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize) -> Ordering {
-        if d1 == 0 {
-            n1 = n1.signum();
-        }
-        else if d1 < 0 {
-            n1 = -n1;
-            d1 = -d1;
-        }
-        if d2 == 0 {
-            n2 = n2.signum();
-        }
-        else if d2 < 0 {
-            n2 = -n2;
-            d2 = -d2;
-        }
-        match if d1 != 0 || d2 != 0 { (n1.checked_mul(d2), n2.checked_mul(d1)) } else { (Some(n1), Some(n2)) } {
-            (Some(n1d2), Some(n2d1)) => n1d2.cmp(&n2d1),
-            _ => Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2)),
-        }
-    }
-
-    fn lt(n1: isize, d1: isize, n2: isize, d2: isize) -> bool {
-        Homographic::compare(n1, d1, n2, d2) == Ordering::Less
-    }
-
     fn inside_domain(n: isize, d:isize) -> bool {
         !Homographic::less_than_zero(n, d) && !Homographic::greater_than_one(n, d)
-    }
-
-    fn sort(n1: isize, d1: isize, n2: isize, d2: isize) -> (isize, isize, isize, isize) {
-        if Homographic::lt(n1, d1, n2, d2) { (n1, d1, n2, d2) } else { (n2, d2, n1, d1) }
     }
 
     fn is_pole_outside_domain(&self) -> bool {
