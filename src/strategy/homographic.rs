@@ -669,17 +669,16 @@ impl Homographic {
 
     fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
-        // FIXME: optimize comparisons
         if Homographic::less_than_minus_one(nmax, dmax) {
             Ok(Some(self.ground()))
         }
-        else if Homographic::gt(nmin, dmin, -1, 1) && Homographic::lt(nmax, dmax, 0, 1) {
+        else if Homographic::greater_than_minus_one(nmin, dmin) && Homographic::less_than_zero(nmax, dmax) {
             Ok(Some(self.reflect()))
         }
-        else if Homographic::gt(nmin, dmin, 0, 1) && Homographic::lt(nmax, dmax, 1, 1) {
+        else if Homographic::greater_than_zero(nmin, dmin) && Homographic::less_than_one(nmax, dmax) {
             Ok(None)
         }
-        else if Homographic::gt(nmin, dmin, 1, 1) {
+        else if Homographic::greater_than_one(nmin, dmin) {
             Ok(Some(self.turn()))
         }
         else {
@@ -687,8 +686,28 @@ impl Homographic {
         }
     }
 
+    fn greater_than_one(n: isize, d:isize) -> bool {
+        if d > 0 { n > d } else if d < 0 { n < d } else { n > 0 }
+    }
+
+    fn less_than_one(n: isize, d:isize) -> bool {
+        if d > 0 { n < d } else if d < 0 { n > d } else { n < 0 }
+    }
+
+    fn greater_than_zero(n: isize, d:isize) -> bool {
+        if d >= 0 { n > 0 } else { n < 0 }
+    }
+
+    fn less_than_zero(n: isize, d:isize) -> bool {
+        if d >= 0 { n < 0 } else { n > 0 }
+    }
+
+    fn greater_than_minus_one(n: isize, d:isize) -> bool {
+        if d > 0 { n > -d } else if d < 0 { n < -d } else { n > 0 }
+    }
+
     fn less_than_minus_one(n: isize, d:isize) -> bool {
-        Homographic::lt(n, d, -1, 1)
+        if d > 0 { n < -d } else if d < 0 { n > -d } else { n < 0 }
     }
 
     fn ground(&mut self) -> protocol::Primer {
@@ -715,9 +734,15 @@ impl Homographic {
         let (n0, d0) = self.value_at_zero();
         let (n1, d1) = self.value_at_one();
         if !Homographic::valid_ratio(n0, d0) {
+            if !Homographic::valid_ratio(n1, d1) {
+                panic!("undefined ratio");
+            }
             (n1, d1, n1, d1)
         }
         else if !Homographic::valid_ratio(n1, d1) {
+            if !Homographic::valid_ratio(n0, d0) {
+                panic!("undefined ratio");
+            }
             (n0, d0, n0, d0)
         }
         else {
@@ -748,13 +773,7 @@ impl Homographic {
             n2 = -n2;
             d2 = -d2;
         }
-        let (on1d2, on2d1) = if d1 != 0 || d2 != 0 {
-            (n1.checked_mul(d2), n2.checked_mul(d1))
-        }
-        else {
-            (Some(n1), Some(n2))
-        };
-        match (on1d2, on2d1) {
+        match if d1 != 0 || d2 != 0 { (n1.checked_mul(d2), n2.checked_mul(d1)) } else { (Some(n1), Some(n2)) } {
             (Some(n1d2), Some(n2d1)) => n1d2.cmp(&n2d1),
             _ => Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2)),
         }
