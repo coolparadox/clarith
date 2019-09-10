@@ -18,12 +18,23 @@
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
-pub mod ratio;
-pub mod homographic;
-pub mod combine;
-
 use crate::protocol;
+use crate::strategy::Strategy;
+use crate::Number;
+use crate::strategy::ratio::Ratio;
+use crate::strategy::homographic::Homographic;
 
-pub trait Strategy {
-    fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>>;
+pub struct Combine {
+}
+
+pub fn new(x: Number, y: Number, nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
+    (Some(protocol::Special::Zero), None, None, None, None)
+}
+
+impl Strategy for Combine {
+
+    fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
+        Ok(None)
+    }
+
 }

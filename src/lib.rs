@@ -93,9 +93,8 @@ impl Number {
         Number::Other(primer, Clog{strategy: Box::new(ratio.unwrap())})
     }
 
-    /// Construct a Number by applying an homographic transformation to another Number.
-    pub fn homographic(x: Number, a: isize, b: isize, c: isize, d: isize) -> Number {
-        let (special, primer, ratio, homographic) = strategy::homographic::new(x, a, b, c, d);
+    pub fn homographic(x: Number, nx: isize, n: isize, dx: isize, d: isize) -> Number {
+        let (special, primer, ratio, homographic) = strategy::homographic::new(x, nx, n, dx, d);
         if let Some(fixed) = special {
             Number::Special(fixed)
         }
@@ -105,6 +104,24 @@ impl Number {
         }
         else {
             Number::Other(primer, Clog{strategy: Box::new(homographic.unwrap())})
+        }
+    }
+
+    pub fn combine(x: Number, y: Number, nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize) -> Number {
+        let (special, primer, ratio, homographic, combine) = strategy::combine::new(x, y, nxy, nx, ny, n, dxy, dx, dy, d);
+        if let Some(fixed) = special {
+            Number::Special(fixed)
+        }
+        else if let Some(ratio) = ratio
+        {
+            Number::Other(primer, Clog{strategy: Box::new(ratio)})
+        }
+        else if let Some(homographic) = homographic
+        {
+            Number::Other(primer, Clog{strategy: Box::new(homographic)})
+        }
+        else {
+            Number::Other(primer, Clog{strategy: Box::new(combine.unwrap())})
         }
     }
 
