@@ -560,31 +560,31 @@ mod tests {
 
 pub struct Homographic {
     x: Clog,
-    a: isize,
-    b: isize,
-    c: isize,
+    nx: isize,
+    n: isize,
+    dx: isize,
     d: isize,
 }
 
-pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+pub fn new(x: Number, mut nx: isize, mut n: isize, mut dx: isize, mut d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
 
     fn as_ratio(n: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
         let (special, primer, ratio) = ratio::new_i(n, d);
         (special, primer, ratio, None)
     }
 
-    if a == 0 && c == 0 {
-        return as_ratio(b, d);
+    if nx == 0 && dx == 0 {
+        return as_ratio(n, d);
     }
 
     if let Number::Special(special) = x {
         return match special {
             protocol::Special::NegInf => {
-                if a == 0 {
+                if nx == 0 {
                     (Some(protocol::Special::Zero), None, None, None)
                 }
-                else if c == 0 {
-                    if a > 0 {
+                else if dx == 0 {
+                    if nx > 0 {
                         (Some(protocol::Special::NegInf), None, None, None)
                     }
                     else {
@@ -592,24 +592,24 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
                     }
                 }
                 else {
-                    as_ratio(a, c)
+                    as_ratio(nx, dx)
                 }
             },
             protocol::Special::NegOne => {
-                as_ratio(b.checked_sub(a).unwrap(), d.checked_sub(c).unwrap())
+                as_ratio(n.checked_sub(nx).unwrap(), d.checked_sub(dx).unwrap())
             },
             protocol::Special::Zero => {
-                as_ratio(b, d)
+                as_ratio(n, d)
             },
             protocol::Special::PosOne => {
-                as_ratio(b.checked_add(a).unwrap(), d.checked_add(c).unwrap())
+                as_ratio(n.checked_add(nx).unwrap(), d.checked_add(dx).unwrap())
             },
             protocol::Special::PosInf => {
-                if a == 0 {
+                if nx == 0 {
                     (Some(protocol::Special::Zero), None, None, None)
                 }
-                else if c == 0 {
-                    if a > 0 {
+                else if dx == 0 {
+                    if nx > 0 {
                         (Some(protocol::Special::PosInf), None, None, None)
                     }
                     else {
@@ -617,7 +617,7 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
                     }
                 }
                 else {
-                    as_ratio(a, c)
+                    as_ratio(nx, dx)
                 }
             },
         }
@@ -626,28 +626,28 @@ pub fn new(x: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize) ->
     let (x_primer, x_clog) = x.unwrap_other();
     match x_primer {
         Some(protocol::Primer::Turn) => {
-            swap(&mut a, &mut b);
-            swap(&mut c, &mut d);
+            swap(&mut nx, &mut n);
+            swap(&mut dx, &mut d);
         },
         Some(protocol::Primer::Reflect) => {
-            a = -a;
-            c = -c;
+            nx = -nx;
+            dx = -dx;
         },
         Some(protocol::Primer::Ground) => {
-            a = -a;
-            c = -c;
-            swap(&mut a, &mut b);
-            swap(&mut c, &mut d);
+            nx = -nx;
+            dx = -dx;
+            swap(&mut nx, &mut n);
+            swap(&mut dx, &mut d);
         },
         None => {},
     }
-    Homographic::new(x_clog, a, b, c, d)
+    Homographic::new(x_clog, nx, n, dx, d)
 }
 
 impl Homographic {
 
-    fn new(x: Clog, a: isize, b: isize, c: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
-        (Homographic { x, a, b, c, d }).prime()
+    fn new(x: Clog, nx: isize, n: isize, dx: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
+        (Homographic { x, nx, n, dx, d }).prime()
     }
 
     fn prime_ingest(&mut self) -> Option<(Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>)> {
@@ -711,22 +711,22 @@ impl Homographic {
     }
 
     fn ground(&mut self) -> protocol::Primer {
-        self.c = -self.c;
+        self.dx = -self.dx;
         self.d = -self.d;
-        swap(&mut self.a, &mut self.c);
-        swap(&mut self.b, &mut self.d);
+        swap(&mut self.nx, &mut self.dx);
+        swap(&mut self.n, &mut self.d);
         protocol::Primer::Ground
     }
 
     fn reflect(&mut self) -> protocol::Primer {
-        self.a = -self.a;
-        self.b = -self.b;
+        self.nx = -self.nx;
+        self.n = -self.n;
         protocol::Primer::Reflect
     }
 
     fn turn(&mut self) -> protocol::Primer {
-        swap(&mut self.a, &mut self.c);
-        swap(&mut self.b, &mut self.d);
+        swap(&mut self.nx, &mut self.dx);
+        swap(&mut self.n, &mut self.d);
         protocol::Primer::Turn
     }
 
@@ -746,7 +746,7 @@ impl Homographic {
             (n0, d0, n0, d0)
         }
         else {
-            match (self.a.checked_mul(self.d), self.c.checked_mul(self.b)) {
+            match (self.nx.checked_mul(self.d), self.dx.checked_mul(self.n)) {
                 (Some(ad), Some(bc)) => if ad >= bc { (n0, d0, n1, d1) } else { (n1, d1, n0, d0) },
                 _ => if Number::compare(Number::ratio(n0, d0), Number::ratio(n1, d1)) == Ordering::Less { (n0, d0, n1, d1) } else { (n1, d1, n0, d0) },
             }
@@ -766,54 +766,54 @@ impl Homographic {
     }
 
     fn is_pole_outside_domain(&self) -> bool {
-        !Homographic::inside_domain(-self.d, self.c)
+        !Homographic::inside_domain(-self.d, self.dx)
     }
 
     fn is_zero_outside_domain(&self) -> bool {
-        !Homographic::inside_domain(-self.b, self.a)
+        !Homographic::inside_domain(-self.n, self.nx)
     }
 
     fn has_pole(&self) -> bool {
-        Homographic::valid_ratio(self.c, self.d)
+        Homographic::valid_ratio(self.dx, self.d)
     }
 
     fn has_zero(&self) -> bool {
-        Homographic::valid_ratio(self.a, self.b)
+        Homographic::valid_ratio(self.nx, self.n)
     }
 
     fn value_at_one(&self) -> (isize, isize) {
-        (self.b.checked_add(self.a).unwrap(), self.d.checked_add(self.c).unwrap())
+        (self.n.checked_add(self.nx).unwrap(), self.d.checked_add(self.dx).unwrap())
     }
 
     fn value_at_zero(&self) -> (isize, isize) {
-        (self.b, self.d)
+        (self.n, self.d)
     }
 
     fn value_at_one_half(&self) -> (isize, isize) {
-        if self.a % 2 != 0 || self.c % 2 != 0 {
-            (self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(), self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
+        if self.nx % 2 != 0 || self.dx % 2 != 0 {
+            (self.nx.checked_add(self.n.checked_mul(2).unwrap()).unwrap(), self.dx.checked_add(self.d.checked_mul(2).unwrap()).unwrap())
         }
         else {
-            (self.b.checked_add(self.a / 2).unwrap(), self.d.checked_add(self.c / 2).unwrap())
+            (self.n.checked_add(self.nx / 2).unwrap(), self.d.checked_add(self.dx / 2).unwrap())
         }
     }
 
     fn ingest_amplify(&mut self) {
-        if self.a % 2 != 0 || self.c % 2 != 0 {
-            self.b = self.b.checked_mul(2).unwrap();
+        if self.nx % 2 != 0 || self.dx % 2 != 0 {
+            self.n = self.n.checked_mul(2).unwrap();
             self.d = self.d.checked_mul(2).unwrap();
         }
         else {
-            self.a /= 2;
-            self.c /= 2;
+            self.nx /= 2;
+            self.dx /= 2;
         }
     }
 
     fn ingest_uncover(&mut self) {
-        self.a = self.a.checked_add(self.b).unwrap();
-        self.c = self.c.checked_add(self.d).unwrap();
-        swap(&mut self.a, &mut self.b);
-        swap(&mut self.c, &mut self.d);
+        self.nx = self.nx.checked_add(self.n).unwrap();
+        self.dx = self.dx.checked_add(self.d).unwrap();
+        swap(&mut self.nx, &mut self.n);
+        swap(&mut self.dx, &mut self.d);
     }
 
     fn reduction_ingest(&mut self) -> Option<Ratio> {
@@ -888,20 +888,20 @@ impl Homographic {
     }
 
     fn uncover(&mut self) -> protocol::Reduction {
-        self.c = self.c.checked_sub(self.a).unwrap();
-        self.d = self.d.checked_sub(self.b).unwrap();
-        swap(&mut self.a, &mut self.c);
-        swap(&mut self.b, &mut self.d);
+        self.dx = self.dx.checked_sub(self.nx).unwrap();
+        self.d = self.d.checked_sub(self.n).unwrap();
+        swap(&mut self.nx, &mut self.dx);
+        swap(&mut self.n, &mut self.d);
         protocol::Reduction::Uncover
     }
 
     fn amplify(&mut self) -> protocol::Reduction {
-        if self.c % 2 != 0 || self.d % 2 != 0 {
-            self.a = self.a.checked_mul(2).unwrap();
-            self.b = self.b.checked_mul(2).unwrap();
+        if self.dx % 2 != 0 || self.d % 2 != 0 {
+            self.nx = self.nx.checked_mul(2).unwrap();
+            self.n = self.n.checked_mul(2).unwrap();
         }
         else {
-            self.c /= 2;
+            self.dx /= 2;
             self.d /= 2;
         }
         protocol::Reduction::Amplify
