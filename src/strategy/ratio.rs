@@ -27,17 +27,21 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "undefined ratio")]
+    #[should_panic(expected = "division by zero")]
     fn forbids_undefined_ratio() {
         new(true, 0, 0);
     }
 
     #[test]
-    fn supports_negative_infinity() {
-        if let (Some(protocol::Special::NegInf), None, None) = new(false, 1, 0) {
-            return;
-        }
-        panic!();
+    #[should_panic(expected = "division by zero")]
+    fn forbids_negative_infinity() {
+        new(false, 1, 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "division by zero")]
+    fn forbids_positive_infinity() {
+        new(true, 1, 0);
     }
 
     #[test]
@@ -153,14 +157,6 @@ mod tests {
     }
 
     #[test]
-    fn supports_infinity() {
-        if let (Some(protocol::Special::PosInf), None, None) = new(true, 1, 0) {
-            return;
-        }
-        panic!();
-    }
-
-    #[test]
     fn one_half_is_final() {
         if let (None, None, Some(mut ratio)) = new(true, 3, 6) {
             for _ in 1..10 {
@@ -192,17 +188,11 @@ pub struct Ratio {
 }
 
 pub fn new(positive: bool, num: usize, den: usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
-    if num == 0 && den == 0 {
-        panic!("undefined ratio");
+    if den == 0 {
+        panic!("division by zero");
     }
     if num == 0 {
         return (Some(protocol::Special::Zero), None, None);
-    }
-    if den == 0 {
-        if positive {
-            return (Some(protocol::Special::PosInf), None, None);
-        }
-        return (Some(protocol::Special::NegInf), None, None);
     }
     if num == den
     {

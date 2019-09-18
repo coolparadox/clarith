@@ -41,14 +41,10 @@ pub enum Primer {
 /// Values that cannot be uniquely represented by the combination of a Primer and a Clog.
 #[derive(Debug, PartialEq)]
 pub enum Special {
-	/// Negative infinity
-    NegInf,
 	/// Minus one
     NegOne,
 	/// Zero
     Zero,
 	/// One
     PosOne,
-	/// Positive infinity
-    PosInf,
 }

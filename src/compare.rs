@@ -30,10 +30,6 @@ mod tests {
 
     // known well defined values from ratio unit tests
 
-    fn neg_inf() -> Number {
-        Number::ratio(-1, 0)
-    }
-
     fn neg_two() -> Number {
         Number::ratio(-2, 1)
     }
@@ -78,30 +74,8 @@ mod tests {
         Number::ratio(2, 1)
     }
 
-    fn inf() -> Number {
-        Number::ratio(1, 0)
-    }
-
-    #[test]
-    fn compare_negative_infinity() {
-        assert_eq!(compare(neg_inf(), neg_inf()), Ordering::Equal);
-        assert_eq!(compare(neg_inf(), neg_two()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), neg_one()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), neg_two_thirds()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), neg_one_half()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), neg_one_fourth()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), zero()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), one_fourth()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), one_half()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), two_thirds()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), one()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), two()), Ordering::Less);
-        assert_eq!(compare(neg_inf(), inf()), Ordering::Less);
-    }
-
     #[test]
     fn compare_negative_two() {
-        assert_eq!(compare(neg_two(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(neg_two(), neg_two()), Ordering::Equal);
         assert_eq!(compare(neg_two(), neg_one()), Ordering::Less);
         assert_eq!(compare(neg_two(), neg_two_thirds()), Ordering::Less);
@@ -113,12 +87,10 @@ mod tests {
         assert_eq!(compare(neg_two(), two_thirds()), Ordering::Less);
         assert_eq!(compare(neg_two(), one()), Ordering::Less);
         assert_eq!(compare(neg_two(), two()), Ordering::Less);
-        assert_eq!(compare(neg_two(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_negative_one() {
-        assert_eq!(compare(neg_one(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(neg_one(), neg_two()), Ordering::Greater);
         assert_eq!(compare(neg_one(), neg_one()), Ordering::Equal);
         assert_eq!(compare(neg_one(), neg_two_thirds()), Ordering::Less);
@@ -130,12 +102,10 @@ mod tests {
         assert_eq!(compare(neg_one(), two_thirds()), Ordering::Less);
         assert_eq!(compare(neg_one(), one()), Ordering::Less);
         assert_eq!(compare(neg_one(), two()), Ordering::Less);
-        assert_eq!(compare(neg_one(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_negative_two_thirds() {
-        assert_eq!(compare(neg_two_thirds(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(neg_two_thirds(), neg_two()), Ordering::Greater);
         assert_eq!(compare(neg_two_thirds(), neg_one()), Ordering::Greater);
         assert_eq!(compare(neg_two_thirds(), neg_two_thirds()), Ordering::Equal);
@@ -147,12 +117,10 @@ mod tests {
         assert_eq!(compare(neg_two_thirds(), two_thirds()), Ordering::Less);
         assert_eq!(compare(neg_two_thirds(), one()), Ordering::Less);
         assert_eq!(compare(neg_two_thirds(), two()), Ordering::Less);
-        assert_eq!(compare(neg_two_thirds(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_negative_one_half() {
-        assert_eq!(compare(neg_one_half(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(neg_one_half(), neg_two()), Ordering::Greater);
         assert_eq!(compare(neg_one_half(), neg_one()), Ordering::Greater);
         assert_eq!(compare(neg_one_half(), neg_two_thirds()), Ordering::Greater);
@@ -164,12 +132,10 @@ mod tests {
         assert_eq!(compare(neg_one_half(), two_thirds()), Ordering::Less);
         assert_eq!(compare(neg_one_half(), one()), Ordering::Less);
         assert_eq!(compare(neg_one_half(), two()), Ordering::Less);
-        assert_eq!(compare(neg_one_half(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_negative_one_fourth() {
-        assert_eq!(compare(neg_one_fourth(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(neg_one_fourth(), neg_two()), Ordering::Greater);
         assert_eq!(compare(neg_one_fourth(), neg_one()), Ordering::Greater);
         assert_eq!(compare(neg_one_fourth(), neg_two_thirds()), Ordering::Greater);
@@ -181,12 +147,10 @@ mod tests {
         assert_eq!(compare(neg_one_fourth(), two_thirds()), Ordering::Less);
         assert_eq!(compare(neg_one_fourth(), one()), Ordering::Less);
         assert_eq!(compare(neg_one_fourth(), two()), Ordering::Less);
-        assert_eq!(compare(neg_one_fourth(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_zero() {
-        assert_eq!(compare(zero(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(zero(), neg_two()), Ordering::Greater);
         assert_eq!(compare(zero(), neg_one()), Ordering::Greater);
         assert_eq!(compare(zero(), neg_two_thirds()), Ordering::Greater);
@@ -198,12 +162,10 @@ mod tests {
         assert_eq!(compare(zero(), two_thirds()), Ordering::Less);
         assert_eq!(compare(zero(), one()), Ordering::Less);
         assert_eq!(compare(zero(), two()), Ordering::Less);
-        assert_eq!(compare(zero(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_one_fourth() {
-        assert_eq!(compare(one_fourth(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(one_fourth(), neg_two()), Ordering::Greater);
         assert_eq!(compare(one_fourth(), neg_one()), Ordering::Greater);
         assert_eq!(compare(one_fourth(), neg_two_thirds()), Ordering::Greater);
@@ -215,12 +177,10 @@ mod tests {
         assert_eq!(compare(one_fourth(), two_thirds()), Ordering::Less);
         assert_eq!(compare(one_fourth(), one()), Ordering::Less);
         assert_eq!(compare(one_fourth(), two()), Ordering::Less);
-        assert_eq!(compare(one_fourth(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_one_half() {
-        assert_eq!(compare(one_half(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(one_half(), neg_two()), Ordering::Greater);
         assert_eq!(compare(one_half(), neg_one()), Ordering::Greater);
         assert_eq!(compare(one_half(), neg_two_thirds()), Ordering::Greater);
@@ -232,12 +192,10 @@ mod tests {
         assert_eq!(compare(one_half(), two_thirds()), Ordering::Less);
         assert_eq!(compare(one_half(), one()), Ordering::Less);
         assert_eq!(compare(one_half(), two()), Ordering::Less);
-        assert_eq!(compare(one_half(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_two_thirds() {
-        assert_eq!(compare(two_thirds(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(two_thirds(), neg_two()), Ordering::Greater);
         assert_eq!(compare(two_thirds(), neg_one()), Ordering::Greater);
         assert_eq!(compare(two_thirds(), neg_two_thirds()), Ordering::Greater);
@@ -249,12 +207,10 @@ mod tests {
         assert_eq!(compare(two_thirds(), two_thirds()), Ordering::Equal);
         assert_eq!(compare(two_thirds(), one()), Ordering::Less);
         assert_eq!(compare(two_thirds(), two()), Ordering::Less);
-        assert_eq!(compare(two_thirds(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_one() {
-        assert_eq!(compare(one(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(one(), neg_two()), Ordering::Greater);
         assert_eq!(compare(one(), neg_one()), Ordering::Greater);
         assert_eq!(compare(one(), neg_two_thirds()), Ordering::Greater);
@@ -266,12 +222,10 @@ mod tests {
         assert_eq!(compare(one(), two_thirds()), Ordering::Greater);
         assert_eq!(compare(one(), one()), Ordering::Equal);
         assert_eq!(compare(one(), two()), Ordering::Less);
-        assert_eq!(compare(one(), inf()), Ordering::Less);
     }
 
     #[test]
     fn compare_two() {
-        assert_eq!(compare(two(), neg_inf()), Ordering::Greater);
         assert_eq!(compare(two(), neg_two()), Ordering::Greater);
         assert_eq!(compare(two(), neg_one()), Ordering::Greater);
         assert_eq!(compare(two(), neg_two_thirds()), Ordering::Greater);
@@ -283,24 +237,6 @@ mod tests {
         assert_eq!(compare(two(), two_thirds()), Ordering::Greater);
         assert_eq!(compare(two(), one()), Ordering::Greater);
         assert_eq!(compare(two(), two()), Ordering::Equal);
-        assert_eq!(compare(two(), inf()), Ordering::Less);
-    }
-
-    #[test]
-    fn compare_infinity() {
-        assert_eq!(compare(inf(), neg_inf()), Ordering::Greater);
-        assert_eq!(compare(inf(), neg_two()), Ordering::Greater);
-        assert_eq!(compare(inf(), neg_one()), Ordering::Greater);
-        assert_eq!(compare(inf(), neg_two_thirds()), Ordering::Greater);
-        assert_eq!(compare(inf(), neg_one_half()), Ordering::Greater);
-        assert_eq!(compare(inf(), neg_one_fourth()), Ordering::Greater);
-        assert_eq!(compare(inf(), zero()), Ordering::Greater);
-        assert_eq!(compare(inf(), one_fourth()), Ordering::Greater);
-        assert_eq!(compare(inf(), one_half()), Ordering::Greater);
-        assert_eq!(compare(inf(), two_thirds()), Ordering::Greater);
-        assert_eq!(compare(inf(), one()), Ordering::Greater);
-        assert_eq!(compare(inf(), two()), Ordering::Greater);
-        assert_eq!(compare(inf(), inf()), Ordering::Equal);
     }
 
 }
@@ -322,12 +258,6 @@ fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
     if s1 == s2 {
         return Ordering::Equal;
     }
-    if s1 == protocol::Special::NegInf {
-        return Ordering::Less;
-    }
-    if s2 == protocol::Special::NegInf {
-        return Ordering::Greater;
-    }
     if s1 == protocol::Special::NegOne {
         return Ordering::Less;
     }
@@ -337,19 +267,10 @@ fn compare_specials(s1: protocol::Special, s2: protocol::Special) -> Ordering {
     if s1 == protocol::Special::Zero {
         return Ordering::Less;
     }
-    if s2 == protocol::Special::Zero {
-        return Ordering::Greater;
-    }
-    if s1 == protocol::Special::PosOne {
-        return Ordering::Less;
-    }
     return Ordering::Greater;
 }
 
 fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering {
-    if s == protocol::Special::NegInf {
-        return Ordering::Less;
-    }
     if let Some(protocol::Primer::Ground) = p {
         return Ordering::Greater;
     }
@@ -365,10 +286,7 @@ fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering
     if let None = p {
         return Ordering::Greater;
     }
-    if s == protocol::Special::PosOne {
-        return Ordering::Less;
-    }
-    return Ordering::Greater;
+    return Ordering::Less;
 }
 
 fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {

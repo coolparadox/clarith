@@ -26,12 +26,12 @@ fn compare_ratios() {
     let range = 25;
     for n1 in -range..range {
         for d1 in -range..range {
-            if n1 == 0 && d1 == 0 {
+            if d1 == 0 {
                 continue;
             }
             for n2 in -range..range {
                 for d2 in -range..range {
-                    if n2 == 0 && d2 == 0 {
+                    if d2 == 0 {
                         continue;
                     }
                     assert_eq!(
@@ -57,11 +57,11 @@ fn compare_homographics() {
                     }
                     for xn in -range..range {
                         for xd in -range..range {
-                            if xn == 0 && xd == 0 {
+                            if xd == 0 {
                                 continue;
                             }
                             let (rn, rd) = result_ratio(nx, n, dx, d, xn, xd);
-                            if rn == 0 && rd == 0 {
+                            if rd == 0 {
                                 continue;
                             }
                             // println!("{} {} {} {} ({} {}) = {} {}", nx, n, dx, d, xn, xd, rn, rd);
@@ -75,13 +75,11 @@ fn compare_homographics() {
 }
 
 fn reference_compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize) -> Ordering {
-    assert!(n1 != 0 || d1 != 0);
-    assert!(n2 != 0 || d2 != 0);
-    if d1 == 0 { n1 /= n1.abs(); }
-    if d2 == 0 { n2 /= n2.abs(); }
+    assert!(d1 != 0);
+    assert!(d2 != 0);
     if d1 < 0 { n1 *= -1; d1 *= -1; }
     if d2 < 0 { n2 *= -1; d2 *= -1; }
-    let dx = if d1 != 0 || d2 != 0 { n1 * d2 - n2 * d1 } else { n1 - n2 };
+    let dx = n1 * d2 - n2 * d1;
     if dx > 0 {
         Ordering::Greater
     }
@@ -94,7 +92,7 @@ fn reference_compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize)
 }
 
 fn result_ratio(nx: isize, n: isize, dx: isize, d: isize, mut xn: isize, mut xd: isize) -> (isize, isize) {
-    assert!(xn != 0 || xd != 0);
+    assert!(xd != 0);
     if xn == 0 {
         xd = 1;
     }
