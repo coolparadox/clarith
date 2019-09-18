@@ -22,7 +22,7 @@ use std::cmp::Ordering;
 use clarith::Number;
 
 #[test]
-fn compare_ratios() {
+fn test_compare() {
     let range = 25;
     for n1 in -range..range {
         for d1 in -range..range {
@@ -60,12 +60,33 @@ fn compare_homographics() {
                             if xd == 0 {
                                 continue;
                             }
-                            let (rn, rd) = result_ratio(nx, n, dx, d, xn, xd);
+                            let (rn, rd) = expected_homographic(nx, n, dx, d, xn, xd);
                             if rd == 0 {
                                 continue;
                             }
-                            // println!("{} {} {} {} ({} {}) = {} {}", nx, n, dx, d, xn, xd, rn, rd);
+                            println!("{} {} {} {} ({} {}) = ({} {})", nx, n, dx, d, xn, xd, rn, rd);
                             assert_eq!(Number::compare(Number::homographic(Number::ratio(xn, xd), nx, n, dx, d), Number::ratio(rn, rd)), Ordering::Equal);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn compare_combines() {
+    for nxy in 0..2 {
+        for dxy in 0..2 {
+            for nx in 0..2 {
+                for dx in 0..2 {
+                    for ny in 0..2 {
+                        for dy in 0..2 {
+                            for n in 0..2 {
+                                for d in 0..2 {
+                                    compare_combine(nxy, nx, ny, n, dxy, dx, dy, d);
+                                }
+                            }
                         }
                     }
                 }
@@ -91,14 +112,98 @@ fn reference_compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize)
     }
 }
 
-fn result_ratio(nx: isize, n: isize, dx: isize, d: isize, mut xn: isize, mut xd: isize) -> (isize, isize) {
-    assert!(xd != 0);
-    if xn == 0 {
-        xd = 1;
+fn compare_combine(nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize) {
+
+    let inputs = vec![
+        (-2, 1),
+        (-1, 1),
+        (-2, 3),
+        (-1, 2),
+        (-1, 4),
+        (0, 1),
+        (1, 4),
+        (1, 2),
+        (2, 3),
+        (1, 1),
+        (2, 1),
+    ];
+
+    for (xn, xd) in &inputs {
+        for (yn, yd) in &inputs {
+            let (rn, rd) = expected_combine(nxy, nx, ny, n, dxy, dx, dy, d, *xn, *xd, *yn, *yd);
+            if rd == 0 {
+                continue;
+            }
+            println!("{} {} {} {}  {} {} {} {}  ({} {})  ({} {})  =  ({} {})", nxy, nx, ny, n, dxy, dx, dy, d, *xn, *xd, *yn, *yd, rn, rd);
+            assert_eq!(
+                Number::compare(
+                    Number::combine(Number::ratio(*xn, *xd), Number::ratio(*yn, *yd), nxy, nx, ny, n, dxy, dx, dy, d),
+                    Number::ratio(rn, rd)
+                ),
+                Ordering::Equal
+            );
+        }
     }
-    if xd < 0 {
-        xn *= -1;
-        xd *= -1;
-    }
-    (nx * xn + n * xd, dx * xn + d * xd)
+
 }
+
+fn expected_homographic(nx: isize, n: isize, dx: isize, d: isize, xn: isize, xd: isize) -> (isize, isize) {
+    let x = (xn, xd);
+    div(
+        add(mul((nx, 1), x), (n, 1)),
+        add(mul((dx, 1), x), (d, 1))
+    )
+}
+
+fn expected_combine(nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize, xn: isize, xd: isize, yn: isize, yd: isize) -> (isize, isize) {
+    let x = (xn, xd);
+    let y = (yn, yd);
+    div(
+        add(add(add(mul((nxy, 1), mul(x, y)), mul((nx, 1), x)), mul((ny, 1), y)), (n, 1)),
+        add(add(add(mul((dxy, 1), mul(x, y)), mul((dx, 1), x)), mul((dy, 1), y)), (d, 1))
+    )
+}
+
+fn add(f1: (isize, isize), f2: (isize, isize)) -> (isize, isize) {
+    let (n1, d1) = fix(f1);
+    let (n2, d2) = fix(f2);
+    fix((n1 * d2 + n2 * d1, d1 * d2))
+}
+
+fn div(f1: (isize, isize), f2: (isize, isize)) -> (isize, isize) {
+    let (n1, d1) = fix(f1);
+    let (n2, d2) = fix(f2);
+    fix((n1 * d2, d1 * n2))
+}
+
+fn mul(f1: (isize, isize), f2: (isize, isize)) -> (isize, isize) {
+    let (n1, d1) = fix(f1);
+    let (n2, d2) = fix(f2);
+    fix((n1 * n2, d1 * d2))
+}
+
+fn fix(f: (isize, isize)) -> (isize, isize) {
+    let (n, d) = f;
+    if d == 0 {
+        (1, 0)
+    }
+    else if n == 0 {
+        (0, 1)
+    }
+    else {
+        let g = gcd(n, d);
+        let ng = n / g;
+        let dg = d / g;
+        (ng * dg.signum(), dg * dg.signum())
+    }
+}
+
+fn gcd(a: isize, b: isize) -> isize {
+    if b == 0 {
+        a
+    }
+    else {
+        gcd(b, a % b)
+    }
+}
+
