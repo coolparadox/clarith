@@ -23,7 +23,9 @@ use crate::protocol;
 use crate::strategy::Strategy;
 use crate::Number;
 use crate::strategy::ratio::Ratio;
+use crate::strategy::homographic;
 use crate::strategy::homographic::Homographic;
+use crate::Clog;
 
 #[cfg(test)]
 mod tests {
@@ -534,9 +536,68 @@ mod tests {
 }
 
 pub struct Combine {
+    x: Clog,
+    y: Clog,
+    a: isize,
+    b: isize,
+    c: isize,
+    d: isize,
+    e: isize,
+    f: isize,
+    g: isize,
+    h: isize,
 }
 
-pub fn new(x: Number, y: Number, nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
+/*
+ingestions
+-x: -a -b c d -e -f g h
+-y: -a b -c d -e f -g h
+1/x: c d a b g h e f
+1/y: b a d c f e h g
+2x: a/2 b/2 c d e/2 f/2 g h
+2x: a b 2c 2d e f 2g 2h
+2y: a/2 b c/2 d e/2 f g/2 h
+2y: a 2b c 2d e 2f g 2h
+x-1: a b a+c b+d e f e+g f+h
+y-1: a a+b c c+d e e+f g g+h
+
+egestions
+1/z: e f g h a b c d
+-z: -a -b -c -d e f g h
+2z: a b c d e/2 f/2 g/2 h/2
+2z: 2a 2b 2c 2d e f g h
+z-1: a-e b-f c-g d-h e f g h
+
+special outputs
+s(0,0) = d/h
+s(0,1) = (c+d)/(g+h)
+s(1,0) = (b+d)/(f+h)
+s(1,1) = (a+b+c+d)/(e+f+g+h)
+s(1/2,y) = a/2+c b/2+d e/2+g f/2+h
+s(1/2,y) = a+2c b+2d e+2g f+2h
+s(x,1/2) = a/2+b c/2+d e/2+f g/2+h
+s(x,1/2) = a+2b c+2d e+2f g+2h
+s(0, y) = c d g h
+s(x, 0) = b d f h
+s(1, y) = a+c b+d e+g f+h
+s(x, 1) = a+b c+d e+f g+h
+s(-1, y) = c-a d-b g-e h-f
+s(x, -1) = b-a d-c f-e h-g
+
+zeros in domain
+signums: d, b+d, c+d, a+b+c+d
+
+poles in domain
+signums: h, f+h, g+h, e+f+g+h
+ */
+
+pub fn new(x: Number, y: Number, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize, g: isize, h: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
+
+    fn as_homographic(x: Number, nx: isize, n: isize, dx:isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
+        let (special, primer, ratio, homographic) = homographic::new(x, nx, n, dx, d);
+        (special, primer, ratio, homographic, None)
+    }
+    
     (Some(protocol::Special::Zero), None, None, None, None)
 }
 
