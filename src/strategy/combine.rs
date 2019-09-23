@@ -598,7 +598,35 @@ pub fn new(x: Number, y: Number, a: isize, b: isize, c: isize, d: isize, e: isiz
         (special, primer, ratio, homographic, None)
     }
     
-    (Some(protocol::Special::Zero), None, None, None, None)
+    if let Number::Special(special) = x {
+        match special {
+            protocol::Special::NegOne => {
+                as_homographic(y, c.checked_sub(a).unwrap(), d.checked_sub(b).unwrap(), g.checked_sub(e).unwrap(), h.checked_sub(f).unwrap())
+            },
+            protocol::Special::Zero => {
+                as_homographic(y, c, d, g, h)
+            },
+            protocol::Special::PosOne => {
+                as_homographic(y, c.checked_add(a).unwrap(), d.checked_add(b).unwrap(), g.checked_add(e).unwrap(), h.checked_add(f).unwrap())
+            },
+        }
+    }
+    else if let Number::Special(special) = y {
+        match special {
+            protocol::Special::NegOne => {
+                as_homographic(x, b.checked_sub(a).unwrap(), d.checked_sub(c).unwrap(), f.checked_sub(e).unwrap(), h.checked_sub(g).unwrap())
+            },
+            protocol::Special::Zero => {
+                as_homographic(x, b, d, f, h)
+            },
+            protocol::Special::PosOne => {
+                as_homographic(x, b.checked_add(a).unwrap(), d.checked_add(c).unwrap(), f.checked_add(e).unwrap(), h.checked_add(g).unwrap())
+            },
+        }
+    }
+    else {
+        (Some(protocol::Special::Zero), None, None, None, None)
+    }
 }
 
 impl Strategy for Combine {
