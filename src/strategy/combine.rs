@@ -19,6 +19,7 @@
  */
 
 use std::cmp::Ordering;
+use std::mem::swap;
 use crate::protocol;
 use crate::strategy::Strategy;
 use crate::Number;
@@ -591,13 +592,63 @@ poles in domain
 signums: h, f+h, g+h, e+f+g+h
  */
 
-pub fn new(x: Number, y: Number, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize, g: isize, h: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
+pub fn new(x: Number, y: Number, mut a: isize, mut b: isize, mut c: isize, mut d: isize, mut e: isize, mut f: isize, mut g: isize, mut h: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
 
     fn as_homographic(x: Number, nx: isize, n: isize, dx:isize, d: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
         let (special, primer, ratio, homographic) = homographic::new(x, nx, n, dx, d);
         (special, primer, ratio, homographic, None)
     }
-    
+
+    macro_rules! turn_x {
+        () => {
+            swap(&mut a, &mut c);
+            swap(&mut b, &mut d);
+            swap(&mut e, &mut g);
+            swap(&mut f, &mut h);
+        };
+    }
+
+    macro_rules! turn_y {
+        () => {
+            swap(&mut a, &mut b);
+            swap(&mut c, &mut d);
+            swap(&mut e, &mut f);
+            swap(&mut g, &mut h);
+        };
+    }
+
+    macro_rules! reflect_x {
+        () => {
+            a *= -1;
+            b *= -1;
+            e *= -1;
+            f *= -1;
+        };
+    }
+
+    macro_rules! reflect_y {
+        () => {
+            a *= -1;
+            c *= -1;
+            e *= -1;
+            g *= -1;
+        };
+    }
+
+    macro_rules! ground_x {
+        () => {
+            turn_x!();
+            reflect_x!();
+        };
+    }
+
+    macro_rules! ground_y {
+        () => {
+            turn_y!();
+            reflect_y!();
+        };
+    }
+
     if let Number::Special(special) = x {
         match special {
             protocol::Special::NegOne => {
@@ -625,8 +676,45 @@ pub fn new(x: Number, y: Number, a: isize, b: isize, c: isize, d: isize, e: isiz
         }
     }
     else {
+
+        let (x_primer, x_clog) = x.unwrap_other();
+        match x_primer {
+            Some(protocol::Primer::Turn) => {
+                turn_x!();
+            },
+            Some(protocol::Primer::Reflect) => {
+                reflect_x!();
+            },
+            Some(protocol::Primer::Ground) => {
+                ground_x!();
+            },
+            None => {},
+        }
+
+        let (y_primer, y_clog) = y.unwrap_other();
+        match y_primer {
+            Some(protocol::Primer::Turn) => {
+                turn_y!();
+            },
+            Some(protocol::Primer::Reflect) => {
+                reflect_y!();
+            },
+            Some(protocol::Primer::Ground) => {
+                ground_y!();
+            },
+            None => {},
+        }
+
+        Combine::new(x_clog, y_clog, a, b, c, d, e, f, g, h)
+    }
+}
+
+impl Combine {
+
+    fn new(x: Clog, y: Clog, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize, g: isize, h: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
         (Some(protocol::Special::Zero), None, None, None, None)
     }
+
 }
 
 impl Strategy for Combine {
