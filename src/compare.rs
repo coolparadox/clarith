@@ -3,24 +3,24 @@
  *
  * This file is part of clarith, a library for performing arithmetic
  * in continued logarithm representation.
- * 
+ *
  * clarith is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * clarith is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
+use crate::protocol;
 use crate::Clog;
 use crate::Number;
-use crate::protocol;
 use std::cmp::Ordering;
 
 #[cfg(test)]
@@ -138,7 +138,10 @@ mod tests {
     fn compare_negative_one_fourth() {
         assert_eq!(compare(neg_one_fourth(), neg_two()), Ordering::Greater);
         assert_eq!(compare(neg_one_fourth(), neg_one()), Ordering::Greater);
-        assert_eq!(compare(neg_one_fourth(), neg_two_thirds()), Ordering::Greater);
+        assert_eq!(
+            compare(neg_one_fourth(), neg_two_thirds()),
+            Ordering::Greater
+        );
         assert_eq!(compare(neg_one_fourth(), neg_one_half()), Ordering::Greater);
         assert_eq!(compare(neg_one_fourth(), neg_one_fourth()), Ordering::Equal);
         assert_eq!(compare(neg_one_fourth(), zero()), Ordering::Less);
@@ -289,9 +292,17 @@ fn compare_hybrid(s: protocol::Special, p: Option<protocol::Primer>) -> Ordering
     return Ordering::Less;
 }
 
-fn compare_others(p1: Option<protocol::Primer>, c1: Clog, p2: Option<protocol::Primer>, c2: Clog) -> Ordering {
-    compare_primers(&p1, &p2)
-        .then(compare_clogs(c1, c2, p1 != Some(protocol::Primer::Reflect) && p1 != Some(protocol::Primer::Turn)))
+fn compare_others(
+    p1: Option<protocol::Primer>,
+    c1: Clog,
+    p2: Option<protocol::Primer>,
+    c2: Clog,
+) -> Ordering {
+    compare_primers(&p1, &p2).then(compare_clogs(
+        c1,
+        c2,
+        p1 != Some(protocol::Primer::Reflect) && p1 != Some(protocol::Primer::Turn),
+    ))
 }
 
 fn compare_primers(p1: &Option<protocol::Primer>, p2: &Option<protocol::Primer>) -> Ordering {
@@ -328,11 +339,11 @@ fn compare_clogs(mut c1: Clog, mut c2: Clog, mut polarity: bool) -> Ordering {
         match e1 {
             None => {
                 return Ordering::Equal;
-            },
+            }
             Some(protocol::Reduction::Uncover) => {
                 polarity = !polarity;
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
     let answer = match e1 {
@@ -345,8 +356,7 @@ fn compare_clogs(mut c1: Clog, mut c2: Clog, mut polarity: bool) -> Ordering {
     };
     if polarity {
         answer
-    }
-    else {
+    } else {
         answer.reverse()
     }
 }

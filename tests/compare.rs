@@ -3,23 +3,23 @@
  *
  * This file is part of clarith, a library for performing arithmetic
  * in continued logarithm representation.
- * 
+ *
  * clarith is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * clarith is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
-use std::cmp::Ordering;
 use clarith::Number;
+use std::cmp::Ordering;
 
 #[test]
 fn test_compare() {
@@ -35,10 +35,9 @@ fn test_compare() {
                         continue;
                     }
                     assert_eq!(
-                        Number::compare(
-                            Number::ratio(n1, d1),
-                            Number::ratio(n2, d2)),
-                        reference_compare(n1, d1, n2, d2));
+                        Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2)),
+                        reference_compare(n1, d1, n2, d2)
+                    );
                 }
             }
         }
@@ -64,8 +63,17 @@ fn compare_homographics() {
                             if rd == 0 {
                                 continue;
                             }
-                            println!("{} {} {} {} ({} {}) = ({} {})", nx, n, dx, d, xn, xd, rn, rd);
-                            assert_eq!(Number::compare(Number::homographic(Number::ratio(xn, xd), nx, n, dx, d), Number::ratio(rn, rd)), Ordering::Equal);
+                            println!(
+                                "{} {} {} {} ({} {}) = ({} {})",
+                                nx, n, dx, d, xn, xd, rn, rd
+                            );
+                            assert_eq!(
+                                Number::compare(
+                                    Number::homographic(Number::ratio(xn, xd), nx, n, dx, d),
+                                    Number::ratio(rn, rd)
+                                ),
+                                Ordering::Equal
+                            );
                         }
                     }
                 }
@@ -98,22 +106,34 @@ fn compare_combines() {
 fn reference_compare(mut n1: isize, mut d1: isize, mut n2: isize, mut d2: isize) -> Ordering {
     assert!(d1 != 0);
     assert!(d2 != 0);
-    if d1 < 0 { n1 *= -1; d1 *= -1; }
-    if d2 < 0 { n2 *= -1; d2 *= -1; }
+    if d1 < 0 {
+        n1 *= -1;
+        d1 *= -1;
+    }
+    if d2 < 0 {
+        n2 *= -1;
+        d2 *= -1;
+    }
     let dx = n1 * d2 - n2 * d1;
     if dx > 0 {
         Ordering::Greater
-    }
-    else if dx < 0 {
+    } else if dx < 0 {
         Ordering::Less
-    }
-    else {
+    } else {
         Ordering::Equal
     }
 }
 
-fn compare_combine(nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize) {
-
+fn compare_combine(
+    nxy: isize,
+    nx: isize,
+    ny: isize,
+    n: isize,
+    dxy: isize,
+    dx: isize,
+    dy: isize,
+    d: isize,
+) {
     let inputs = vec![
         (-2, 1),
         (-1, 1),
@@ -134,33 +154,75 @@ fn compare_combine(nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: i
             if rd == 0 {
                 continue;
             }
-            println!("{} {} {} {}  {} {} {} {}  ({} {})  ({} {})  =  ({} {})", nxy, nx, ny, n, dxy, dx, dy, d, *xn, *xd, *yn, *yd, rn, rd);
+            println!(
+                "{} {} {} {}  {} {} {} {}  ({} {})  ({} {})  =  ({} {})",
+                nxy, nx, ny, n, dxy, dx, dy, d, *xn, *xd, *yn, *yd, rn, rd
+            );
             assert_eq!(
                 Number::compare(
-                    Number::combine(Number::ratio(*xn, *xd), Number::ratio(*yn, *yd), nxy, nx, ny, n, dxy, dx, dy, d),
+                    Number::combine(
+                        Number::ratio(*xn, *xd),
+                        Number::ratio(*yn, *yd),
+                        nxy,
+                        nx,
+                        ny,
+                        n,
+                        dxy,
+                        dx,
+                        dy,
+                        d
+                    ),
                     Number::ratio(rn, rd)
                 ),
                 Ordering::Equal
             );
         }
     }
-
 }
 
-fn expected_homographic(nx: isize, n: isize, dx: isize, d: isize, xn: isize, xd: isize) -> (isize, isize) {
+fn expected_homographic(
+    nx: isize,
+    n: isize,
+    dx: isize,
+    d: isize,
+    xn: isize,
+    xd: isize,
+) -> (isize, isize) {
     let x = (xn, xd);
-    div(
-        add(mul((nx, 1), x), (n, 1)),
-        add(mul((dx, 1), x), (d, 1))
-    )
+    div(add(mul((nx, 1), x), (n, 1)), add(mul((dx, 1), x), (d, 1)))
 }
 
-fn expected_combine(nxy: isize, nx: isize, ny: isize, n: isize, dxy: isize, dx: isize, dy: isize, d: isize, xn: isize, xd: isize, yn: isize, yd: isize) -> (isize, isize) {
+fn expected_combine(
+    nxy: isize,
+    nx: isize,
+    ny: isize,
+    n: isize,
+    dxy: isize,
+    dx: isize,
+    dy: isize,
+    d: isize,
+    xn: isize,
+    xd: isize,
+    yn: isize,
+    yd: isize,
+) -> (isize, isize) {
     let x = (xn, xd);
     let y = (yn, yd);
     div(
-        add(add(add(mul((nxy, 1), mul(x, y)), mul((nx, 1), x)), mul((ny, 1), y)), (n, 1)),
-        add(add(add(mul((dxy, 1), mul(x, y)), mul((dx, 1), x)), mul((dy, 1), y)), (d, 1))
+        add(
+            add(
+                add(mul((nxy, 1), mul(x, y)), mul((nx, 1), x)),
+                mul((ny, 1), y),
+            ),
+            (n, 1),
+        ),
+        add(
+            add(
+                add(mul((dxy, 1), mul(x, y)), mul((dx, 1), x)),
+                mul((dy, 1), y),
+            ),
+            (d, 1),
+        ),
     )
 }
 
@@ -186,11 +248,9 @@ fn fix(f: (isize, isize)) -> (isize, isize) {
     let (n, d) = f;
     if d == 0 {
         (1, 0)
-    }
-    else if n == 0 {
+    } else if n == 0 {
         (0, 1)
-    }
-    else {
+    } else {
         let g = gcd(n, d);
         let ng = n / g;
         let dg = d / g;
@@ -201,9 +261,7 @@ fn fix(f: (isize, isize)) -> (isize, isize) {
 fn gcd(a: isize, b: isize) -> isize {
     if b == 0 {
         a
-    }
-    else {
+    } else {
         gcd(b, a % b)
     }
 }
-

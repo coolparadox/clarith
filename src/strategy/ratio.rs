@@ -3,17 +3,17 @@
  *
  * This file is part of clarith, a library for performing arithmetic
  * in continued logarithm representation.
- * 
+ *
  * clarith is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * clarith is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
@@ -172,7 +172,8 @@ mod tests {
 
     #[test]
     fn does_not_overflow() {
-        if let (None, None, Some(mut ratio)) = new(true, usize::max_value() - 1, usize::max_value()) {
+        if let (None, None, Some(mut ratio)) = new(true, usize::max_value() - 1, usize::max_value())
+        {
             if let Ok(Some(protocol::Reduction::Uncover)) = ratio.egest() {
                 return;
             }
@@ -187,32 +188,65 @@ pub struct Ratio {
     den: usize,
 }
 
-pub fn new(positive: bool, num: usize, den: usize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
+pub fn new(
+    positive: bool,
+    num: usize,
+    den: usize,
+) -> (
+    Option<protocol::Special>,
+    Option<protocol::Primer>,
+    Option<Ratio>,
+) {
     if den == 0 {
         panic!("division by zero");
     }
     if num == 0 {
         return (Some(protocol::Special::Zero), None, None);
     }
-    if num == den
-    {
+    if num == den {
         if positive {
             return (Some(protocol::Special::PosOne), None, None);
         }
         return (Some(protocol::Special::NegOne), None, None);
     }
     if num > den {
-        return (None, if positive { Some(protocol::Primer::Turn) } else { Some(protocol::Primer::Ground) }, Some(Ratio {num: den, den: num}));
+        return (
+            None,
+            if positive {
+                Some(protocol::Primer::Turn)
+            } else {
+                Some(protocol::Primer::Ground)
+            },
+            Some(Ratio { num: den, den: num }),
+        );
     }
-    return (None, if positive { None } else { Some(protocol::Primer::Reflect) }, Some(Ratio {num: num, den: den}));
+    return (
+        None,
+        if positive {
+            None
+        } else {
+            Some(protocol::Primer::Reflect)
+        },
+        Some(Ratio { num: num, den: den }),
+    );
 }
 
-pub fn new_i(num: isize, den: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>) {
-    new((num >= 0 && den >= 0) || (num < 0 && den < 0), if num >= 0 { num } else { -num } as usize, if den >= 0 { den } else { -den } as usize)
+pub fn new_i(
+    num: isize,
+    den: isize,
+) -> (
+    Option<protocol::Special>,
+    Option<protocol::Primer>,
+    Option<Ratio>,
+) {
+    new(
+        (num >= 0 && den >= 0) || (num < 0 && den < 0),
+        if num >= 0 { num } else { -num } as usize,
+        if den >= 0 { den } else { -den } as usize,
+    )
 }
 
 impl Strategy for Ratio {
-
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
         if self.num > self.den / 2 {
             std::mem::swap(&mut self.num, &mut self.den);
@@ -225,11 +259,9 @@ impl Strategy for Ratio {
                 self.den *= 2;
                 return Ok(None);
             }
-        }
-        else {
+        } else {
             self.num *= 2;
         }
         return Ok(Some(protocol::Reduction::Amplify));
     }
-
 }
