@@ -700,28 +700,21 @@ impl Homographic {
         n != 0 || d != 0
     }
 
-    fn are_both_singularities_outside_domain(&self) -> bool {
-        self.has_zero() && self.has_pole() && self.is_zero_outside_domain() && self.is_pole_outside_domain()
+    fn are_singularities_outside_domain(&self) -> bool {
+        self.is_zero_outside_domain() && self.is_pole_outside_domain()
     }
 
-    fn inside_domain(n: isize, d:isize) -> bool {
-        !Homographic::less_than_zero(n, d) && !Homographic::greater_than_one(n, d)
+    fn is_domain_amenable(mx: isize, m:isize) -> bool {
+        let s = m.signum();
+        s != 0 && s == mx.checked_add(m).unwrap().signum()
     }
 
     fn is_pole_outside_domain(&self) -> bool {
-        !Homographic::inside_domain(-self.d, self.dx)
+        Homographic::is_domain_amenable(self.dx, self.d)
     }
 
     fn is_zero_outside_domain(&self) -> bool {
-        !Homographic::inside_domain(-self.n, self.nx)
-    }
-
-    fn has_pole(&self) -> bool {
-        Homographic::valid_ratio(self.dx, self.d)
-    }
-
-    fn has_zero(&self) -> bool {
-        Homographic::valid_ratio(self.nx, self.n)
+        Homographic::is_domain_amenable(self.nx, self.n)
     }
 
     fn value_at_one(&self) -> (isize, isize) {
@@ -781,7 +774,7 @@ impl Homographic {
 
     fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
 
-        if self.are_both_singularities_outside_domain() {
+        if self.are_singularities_outside_domain() {
             if let Ok(primer) = self.primer_egest() {
                 return (None, primer, None, Some(self));
             }
@@ -856,7 +849,7 @@ impl Strategy for Homographic {
 
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
 
-        if self.are_both_singularities_outside_domain() {
+        if self.are_singularities_outside_domain() {
             if let Ok(reduction) = self.reduction_egest() {
                 return Ok(reduction);
             }
