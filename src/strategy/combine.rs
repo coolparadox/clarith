@@ -18,7 +18,6 @@
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
-use std::cmp::Ordering;
 use std::mem::swap;
 use crate::protocol;
 use crate::strategy::Strategy;
@@ -32,6 +31,7 @@ use crate::Clog;
 mod tests {
 
     use super::*;
+    use std::cmp::Ordering;
 
     #[test]
     fn mul() {
@@ -712,14 +712,56 @@ pub fn new(x: Number, y: Number, mut a: isize, mut b: isize, mut c: isize, mut d
 impl Combine {
 
     fn new(x: Clog, y: Clog, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize, g: isize, h: isize) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
-        (Some(protocol::Special::Zero), None, None, None, None)
+        (Combine { x, y, a, b, c, d, e, f, g, h }).prime()
     }
 
+    fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>, Option<Combine>) {
+        if self.are_singularities_outside_domain() {
+            if let Ok(primer) = self.primer_egest() {
+                return (None, primer, None, None, Some(self));
+            }
+        }
+        match self.prime_ingest() {
+            Some((special, primer, ratio, homographic)) => (special, primer, ratio, homographic, None),
+            None => self.prime(),
+        }
+    }
+
+    fn are_singularities_outside_domain(&self) -> bool {
+        self.is_zero_outside_domain() && self.is_pole_outside_domain()
+    }
+
+    fn is_zero_outside_domain(&self) -> bool {
+        Combine::is_domain_amenable(self.a, self.b, self.c, self.d)
+    }
+
+    fn is_pole_outside_domain(&self) -> bool {
+        Combine::is_domain_amenable(self.e, self.f, self.g, self.h)
+    }
+
+    fn is_domain_amenable(mxy: isize, mx: isize, my: isize, m: isize) -> bool {
+        let s = m.signum();
+        s != 0
+            && s == m.checked_add(mx).unwrap().signum()
+            && s == m.checked_add(my).unwrap().signum()
+            && s == m.checked_add(mxy.checked_add(mx.checked_add(my).unwrap()).unwrap()).unwrap().signum()
+    }
+
+    fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
+        // FIXME: implement me
+        Ok(None)
+    }
+
+    fn prime_ingest(&mut self) -> Option<(Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>)> {
+        // FIXME: implement me
+        Some((Some(protocol::Special::Zero), None, None, None))
+    }
 }
 
 impl Strategy for Combine {
 
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
+        // FIXME: implement me
         Ok(None)
     }
 

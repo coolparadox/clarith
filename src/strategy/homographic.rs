@@ -773,7 +773,6 @@ impl Homographic {
     }
 
     fn prime(mut self) -> (Option<protocol::Special>, Option<protocol::Primer>, Option<Ratio>, Option<Homographic>) {
-
         if self.are_singularities_outside_domain() {
             if let Ok(primer) = self.primer_egest() {
                 return (None, primer, None, Some(self));
