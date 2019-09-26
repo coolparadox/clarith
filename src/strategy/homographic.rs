@@ -21,16 +21,17 @@
 use crate::protocol;
 use crate::strategy::ratio;
 use crate::strategy::ratio::Ratio;
+use crate::strategy::support;
 use crate::strategy::Strategy;
 use crate::Clog;
 use crate::Number;
-use std::cmp::Ordering;
 use std::mem::swap;
 
 #[cfg(test)]
 mod tests {
 
     use super::*;
+    use std::cmp::Ordering;
 
     // known well defined values from ratio unit tests
 
@@ -750,76 +751,17 @@ impl Homographic {
 
     fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
-        if Homographic::less_than_minus_one(nmax, dmax) {
+        if support::less_than_minus_one(nmax, dmax) {
             Ok(Some(self.ground()))
-        } else if Homographic::greater_than_minus_one(nmin, dmin)
-            && Homographic::less_than_zero(nmax, dmax)
+        } else if support::greater_than_minus_one(nmin, dmin) && support::less_than_zero(nmax, dmax)
         {
             Ok(Some(self.reflect()))
-        } else if Homographic::greater_than_zero(nmin, dmin)
-            && Homographic::less_than_one(nmax, dmax)
-        {
+        } else if support::greater_than_zero(nmin, dmin) && support::less_than_one(nmax, dmax) {
             Ok(None)
-        } else if Homographic::greater_than_one(nmin, dmin) {
+        } else if support::greater_than_one(nmin, dmin) {
             Ok(Some(self.turn()))
         } else {
             Err(0)
-        }
-    }
-
-    fn greater_than_one(n: isize, d: isize) -> bool {
-        if d > 0 {
-            n > d
-        } else if d < 0 {
-            n < d
-        } else {
-            n > 0
-        }
-    }
-
-    fn less_than_one(n: isize, d: isize) -> bool {
-        if d > 0 {
-            n < d
-        } else if d < 0 {
-            n > d
-        } else {
-            n < 0
-        }
-    }
-
-    fn greater_than_zero(n: isize, d: isize) -> bool {
-        if d >= 0 {
-            n > 0
-        } else {
-            n < 0
-        }
-    }
-
-    fn less_than_zero(n: isize, d: isize) -> bool {
-        if d >= 0 {
-            n < 0
-        } else {
-            n > 0
-        }
-    }
-
-    fn greater_than_minus_one(n: isize, d: isize) -> bool {
-        if d > 0 {
-            n > -d
-        } else if d < 0 {
-            n < -d
-        } else {
-            n > 0
-        }
-    }
-
-    fn less_than_minus_one(n: isize, d: isize) -> bool {
-        if d > 0 {
-            n < -d
-        } else if d < 0 {
-            n > -d
-        } else {
-            n < 0
         }
     }
 
@@ -846,40 +788,7 @@ impl Homographic {
     fn image_extremes(&self) -> (isize, isize, isize, isize) {
         let (n0, d0) = self.value_at_zero();
         let (n1, d1) = self.value_at_one();
-        if !Homographic::valid_ratio(n0, d0) {
-            if !Homographic::valid_ratio(n1, d1) {
-                panic!("division by zero");
-            }
-            (n1, d1, n1, d1)
-        } else if !Homographic::valid_ratio(n1, d1) {
-            if !Homographic::valid_ratio(n0, d0) {
-                panic!("division by zero");
-            }
-            (n0, d0, n0, d0)
-        } else {
-            match (self.nx.checked_mul(self.d), self.dx.checked_mul(self.n)) {
-                (Some(ad), Some(bc)) => {
-                    if ad >= bc {
-                        (n0, d0, n1, d1)
-                    } else {
-                        (n1, d1, n0, d0)
-                    }
-                }
-                _ => {
-                    if Number::compare(Number::ratio(n0, d0), Number::ratio(n1, d1))
-                        == Ordering::Less
-                    {
-                        (n0, d0, n1, d1)
-                    } else {
-                        (n1, d1, n0, d0)
-                    }
-                }
-            }
-        }
-    }
-
-    fn valid_ratio(n: isize, d: isize) -> bool {
-        n != 0 || d != 0
+        support::updated_range(n0, d0, n0, d0, n1, d1)
     }
 
     fn are_singularities_outside_domain(&self) -> bool {
@@ -983,68 +892,18 @@ impl Homographic {
     fn reduction_egest(&mut self) -> Result<Option<protocol::Reduction>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
         // FIXME: remove sanity checks?
-        if Homographic::not_greater_than_zero(nmin, dmin) {
+        if support::not_greater_than_zero(nmin, dmin) {
             panic!("logic error");
         }
-        if Homographic::not_less_than_one(nmax, dmax) {
+        if support::not_less_than_one(nmax, dmax) {
             panic!("logic error");
         }
-        if Homographic::less_than_one_half(nmax, dmax) {
+        if support::less_than_one_half(nmax, dmax) {
             Ok(Some(self.amplify()))
-        } else if Homographic::greater_than_one_half(nmin, dmin) {
+        } else if support::greater_than_one_half(nmin, dmin) {
             Ok(Some(self.uncover()))
         } else {
             Err(0)
-        }
-    }
-
-    fn greater_than_one_half(mut n: isize, mut d: isize) -> bool {
-        if d % 2 == 0 {
-            d /= 2;
-        } else {
-            n = n.checked_mul(2).unwrap();
-        }
-        if d > 0 {
-            n > d
-        } else if d < 0 {
-            n < d
-        } else {
-            n > 0
-        }
-    }
-
-    fn less_than_one_half(mut n: isize, mut d: isize) -> bool {
-        if d % 2 == 0 {
-            d /= 2;
-        } else {
-            n = n.checked_mul(2).unwrap();
-        }
-        if d > 0 {
-            n < d
-        } else if d < 0 {
-            n > d
-        } else {
-            n < 0
-        }
-    }
-
-    fn not_less_than_one(n: isize, d: isize) -> bool {
-        if d > 0 {
-            n >= d
-        } else if d < 0 {
-            n <= d
-        } else {
-            n > 0
-        }
-    }
-
-    fn not_greater_than_zero(n: isize, d: isize) -> bool {
-        if d > 0 {
-            n <= 0
-        } else if d < 0 {
-            n >= 0
-        } else {
-            n < 0
         }
     }
 

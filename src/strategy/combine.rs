@@ -22,6 +22,7 @@ use crate::protocol;
 use crate::strategy::homographic;
 use crate::strategy::homographic::Homographic;
 use crate::strategy::ratio::Ratio;
+use crate::strategy::support;
 use crate::strategy::Strategy;
 use crate::Clog;
 use crate::Number;
@@ -882,8 +883,19 @@ impl Combine {
     }
 
     fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
-        // FIXME: implement me
-        Ok(None)
+        let (nmin, dmin, nmax, dmax) = self.image_extremes();
+        if support::less_than_minus_one(nmax, dmax) {
+            Ok(Some(self.ground()))
+        } else if support::greater_than_minus_one(nmin, dmin) && support::less_than_zero(nmax, dmax)
+        {
+            Ok(Some(self.reflect()))
+        } else if support::greater_than_zero(nmin, dmin) && support::less_than_one(nmax, dmax) {
+            Ok(None)
+        } else if support::greater_than_one(nmin, dmin) {
+            Ok(Some(self.turn()))
+        } else {
+            Err(0)
+        }
     }
 
     fn prime_ingest(
@@ -894,8 +906,100 @@ impl Combine {
         Option<Ratio>,
         Option<Homographic>,
     )> {
-        // FIXME: implement me
-        Some((Some(protocol::Special::Zero), None, None, None))
+        match self.x.egest() {
+            None => {
+                let (ny, n, dy, d) = self.value_at_end_of_x();
+                return Some(homographic::new(Number::Other(None, self.y), ny, n, dy, d));
+            }
+            Some(protocol::Reduction::Amplify) => {
+                self.amplify_x();
+            }
+            Some(protocol::Reduction::Uncover) => {
+                self.uncover_x();
+            }
+        }
+        match self.y.egest() {
+            None => {
+                let (nx, n, dx, d) = self.value_at_end_of_y();
+                return Some(homographic::new(Number::Other(None, self.x), nx, n, dx, d));
+            }
+            Some(protocol::Reduction::Amplify) => {
+                self.amplify_y();
+            }
+            Some(protocol::Reduction::Uncover) => {
+                self.uncover_y();
+            }
+        }
+        None
+    }
+
+    fn image_extremes(&self) -> (isize, isize, isize, isize) {
+        let (nmin, dmin) = self.value_at_0_0();
+        let (n, d) = self.value_at_0_1();
+        let (nmin, dmin, nmax, dmax) = support::updated_range(nmin, dmin, nmin, dmin, n, d);
+        let (n, d) = self.value_at_1_0();
+        let (nmin, dmin, nmax, dmax) = support::updated_range(nmin, dmin, nmax, dmax, n, d);
+        let (n, d) = self.value_at_1_1();
+        support::updated_range(nmin, dmin, nmax, dmax, n, d)
+    }
+
+    fn ground(&mut self) -> protocol::Primer {
+        self.turn();
+        self.reflect();
+        protocol::Primer::Ground
+    }
+
+    fn reflect(&mut self) -> protocol::Primer {
+        self.a = -self.a;
+        self.b = -self.b;
+        self.c = -self.c;
+        self.d = -self.d;
+        protocol::Primer::Reflect
+    }
+
+    fn turn(&mut self) -> protocol::Primer {
+        swap(&mut self.a, &mut self.e);
+        swap(&mut self.b, &mut self.f);
+        swap(&mut self.c, &mut self.g);
+        swap(&mut self.d, &mut self.h);
+        protocol::Primer::Turn
+    }
+
+    fn value_at_0_0(&self) -> (isize, isize) {
+        (self.d, self.h)
+    }
+
+    fn value_at_0_1(&self) -> (isize, isize) {
+        (
+            self.c.checked_add(self.d).unwrap(),
+            self.g.checked_add(self.h).unwrap(),
+        )
+    }
+
+    fn value_at_1_0(&self) -> (isize, isize) {
+        (
+            self.b.checked_add(self.d).unwrap(),
+            self.f.checked_add(self.h).unwrap(),
+        )
+    }
+
+    fn value_at_1_1(&self) -> (isize, isize) {
+        (
+            self.a
+                .checked_add(
+                    self.b
+                        .checked_add(self.c.checked_add(self.d).unwrap())
+                        .unwrap(),
+                )
+                .unwrap(),
+            self.e
+                .checked_add(
+                    self.f
+                        .checked_add(self.g.checked_add(self.h).unwrap())
+                        .unwrap(),
+                )
+                .unwrap(),
+        )
     }
 }
 

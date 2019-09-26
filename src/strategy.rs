@@ -21,6 +21,7 @@
 pub mod combine;
 pub mod homographic;
 pub mod ratio;
+mod support;
 
 use crate::protocol;
 
