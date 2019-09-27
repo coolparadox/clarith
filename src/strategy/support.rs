@@ -158,3 +158,7 @@ pub fn compare_reduce(n0: isize, d0: isize, n1: isize, d1: isize) -> (isize, isi
         (n1 * d1.signum()).checked_mul(d0.abs()).unwrap(),
     )
 }
+
+pub fn is_even(n: isize) -> bool {
+    n % 2 == 0
+}

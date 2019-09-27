@@ -852,10 +852,10 @@ impl Combine {
             }
         }
         match self.prime_ingest() {
-            Some((special, primer, ratio, homographic)) => {
+            Ok((special, primer, ratio, homographic)) => {
                 (special, primer, ratio, homographic, None)
             }
-            None => self.prime(),
+            Err(myself) => myself.prime(),
         }
     }
 
@@ -899,17 +899,20 @@ impl Combine {
     }
 
     fn prime_ingest(
-        &mut self,
-    ) -> Option<(
-        Option<protocol::Special>,
-        Option<protocol::Primer>,
-        Option<Ratio>,
-        Option<Homographic>,
-    )> {
+        mut self,
+    ) -> Result<
+        (
+            Option<protocol::Special>,
+            Option<protocol::Primer>,
+            Option<Ratio>,
+            Option<Homographic>,
+        ),
+        Combine,
+    > {
         match self.x.egest() {
             None => {
                 let (ny, n, dy, d) = self.value_at_end_of_x();
-                return Some(homographic::new(Number::Other(None, self.y), ny, n, dy, d));
+                return Ok(homographic::new(Number::Other(None, self.y), ny, n, dy, d));
             }
             Some(protocol::Reduction::Amplify) => {
                 self.amplify_x();
@@ -921,7 +924,7 @@ impl Combine {
         match self.y.egest() {
             None => {
                 let (nx, n, dx, d) = self.value_at_end_of_y();
-                return Some(homographic::new(Number::Other(None, self.x), nx, n, dx, d));
+                return Ok(homographic::new(Number::Other(None, self.x), nx, n, dx, d));
             }
             Some(protocol::Reduction::Amplify) => {
                 self.amplify_y();
@@ -930,7 +933,125 @@ impl Combine {
                 self.uncover_y();
             }
         }
-        None
+        Err(self)
+    }
+
+    fn value_at_end_of_x(&self) -> (isize, isize, isize, isize) {
+        if support::is_even(self.a)
+            && support::is_even(self.b)
+            && support::is_even(self.e)
+            && support::is_even(self.f)
+        {
+            (
+                self.c.checked_add(self.a / 2).unwrap(),
+                self.d.checked_add(self.b / 2).unwrap(),
+                self.g.checked_add(self.e / 2).unwrap(),
+                self.h.checked_add(self.f / 2).unwrap(),
+            )
+        } else {
+            (
+                self.a.checked_add(self.c * 2).unwrap(),
+                self.b.checked_add(self.d * 2).unwrap(),
+                self.e.checked_add(self.g * 2).unwrap(),
+                self.f.checked_add(self.h * 2).unwrap(),
+            )
+        }
+    }
+
+    fn value_at_end_of_y(&self) -> (isize, isize, isize, isize) {
+        if support::is_even(self.a)
+            && support::is_even(self.c)
+            && support::is_even(self.e)
+            && support::is_even(self.g)
+        {
+            (
+                self.b.checked_add(self.a / 2).unwrap(),
+                self.d.checked_add(self.c / 2).unwrap(),
+                self.f.checked_add(self.e / 2).unwrap(),
+                self.h.checked_add(self.g / 2).unwrap(),
+            )
+        } else {
+            (
+                self.a.checked_add(self.b * 2).unwrap(),
+                self.c.checked_add(self.d * 2).unwrap(),
+                self.e.checked_add(self.f * 2).unwrap(),
+                self.g.checked_add(self.h * 2).unwrap(),
+            )
+        }
+    }
+
+    fn amplify_x(&mut self) {
+        if support::is_even(self.a)
+            && support::is_even(self.b)
+            && support::is_even(self.e)
+            && support::is_even(self.f)
+        {
+            self.a /= 2;
+            self.b /= 2;
+            self.e /= 2;
+            self.f /= 2;
+        } else {
+            self.c = self.c.checked_mul(2).unwrap();
+            self.d = self.d.checked_mul(2).unwrap();
+            self.g = self.g.checked_mul(2).unwrap();
+            self.h = self.h.checked_mul(2).unwrap();
+        }
+    }
+
+    fn amplify_y(&mut self) {
+        if support::is_even(self.a)
+            && support::is_even(self.c)
+            && support::is_even(self.e)
+            && support::is_even(self.g)
+        {
+            self.a /= 2;
+            self.c /= 2;
+            self.e /= 2;
+            self.g /= 2;
+        } else {
+            self.b = self.b.checked_mul(2).unwrap();
+            self.d = self.d.checked_mul(2).unwrap();
+            self.f = self.f.checked_mul(2).unwrap();
+            self.h = self.h.checked_mul(2).unwrap();
+        }
+    }
+
+    fn uncover_x(&mut self) {
+        self.turn_x();
+        self.shift_x();
+    }
+
+    fn uncover_y(&mut self) {
+        self.turn_y();
+        self.shift_y();
+    }
+
+    fn turn_x(&mut self) {
+        swap(&mut self.a, &mut self.c);
+        swap(&mut self.b, &mut self.d);
+        swap(&mut self.e, &mut self.g);
+        swap(&mut self.f, &mut self.h);
+    }
+
+    fn turn_y(&mut self) {
+        swap(&mut self.a, &mut self.b);
+        swap(&mut self.c, &mut self.d);
+        swap(&mut self.e, &mut self.f);
+        swap(&mut self.g, &mut self.h);
+    }
+
+    fn shift_x(&mut self) {
+        self.c = self.c.checked_add(self.a).unwrap();
+        self.d = self.d.checked_add(self.b).unwrap();
+        self.g = self.g.checked_add(self.e).unwrap();
+        self.h = self.h.checked_add(self.f).unwrap();
+    }
+
+    fn shift_y(&mut self) {
+        self.b = self.b.checked_add(self.a).unwrap();
+        self.d = self.d.checked_add(self.c).unwrap();
+        self.f = self.f.checked_add(self.e).unwrap();
+        self.h = self.h.checked_add(self.g).unwrap();
     }
 
     fn image_extremes(&self) -> (isize, isize, isize, isize) {
