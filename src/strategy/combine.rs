@@ -1122,11 +1122,112 @@ impl Combine {
                 .unwrap(),
         )
     }
+
+    fn reduction_egest(&mut self) -> Result<Option<protocol::Reduction>, isize> {
+        let (nmin, dmin, nmax, dmax) = self.image_extremes();
+        // FIXME: remove sanity checks?
+        if support::not_greater_than_zero(nmin, dmin) {
+            panic!("logic error");
+        }
+        if support::not_less_than_one(nmax, dmax) {
+            panic!("logic error");
+        }
+        if support::less_than_one_half(nmax, dmax) {
+            Ok(Some(self.amplify()))
+        } else if support::greater_than_one_half(nmin, dmin) {
+            Ok(Some(self.uncover()))
+        } else {
+            Err(0)
+        }
+    }
+
+    fn amplify(&mut self) -> protocol::Reduction {
+        if support::is_even(self.e)
+            && support::is_even(self.f)
+            && support::is_even(self.g)
+            && support::is_even(self.h)
+        {
+            self.e /= 2;
+            self.f /= 2;
+            self.g /= 2;
+            self.h /= 2;
+        } else {
+            self.a = self.a.checked_mul(2).unwrap();
+            self.b = self.b.checked_mul(2).unwrap();
+            self.c = self.c.checked_mul(2).unwrap();
+            self.d = self.d.checked_mul(2).unwrap();
+        }
+        protocol::Reduction::Amplify
+    }
+
+    fn uncover(&mut self) -> protocol::Reduction {
+        self.turn();
+        self.shift();
+        protocol::Reduction::Uncover
+    }
+
+    fn shift(&mut self) {
+        self.a = self.a.checked_sub(self.e).unwrap();
+        self.b = self.b.checked_sub(self.f).unwrap();
+        self.c = self.c.checked_sub(self.g).unwrap();
+        self.d = self.d.checked_sub(self.h).unwrap();
+    }
+
+    fn reduction_ingest(mut self) -> (Option<Ratio>, Option<Homographic>, Option<Combine>) {
+        match self.x.egest() {
+            None => {
+                let (ny, n, dy, d) = self.value_at_end_of_x();
+                match homographic::new(Number::Other(None, self.y), ny, n, dy, d) {
+                    (None, None, ratio, homographic) => {
+                        return (ratio, homographic, None);
+                    }
+                    _ => {
+                        panic!("logic error");
+                    }
+                }
+            }
+            Some(protocol::Reduction::Amplify) => {
+                self.amplify_x();
+            }
+            Some(protocol::Reduction::Uncover) => {
+                self.uncover_x();
+            }
+        }
+        match self.y.egest() {
+            None => {
+                let (nx, n, dx, d) = self.value_at_end_of_y();
+                match homographic::new(Number::Other(None, self.x), nx, n, dx, d) {
+                    (None, None, ratio, homographic) => {
+                        return (ratio, homographic, None);
+                    }
+                    _ => {
+                        panic!("logic error");
+                    }
+                }
+            }
+            Some(protocol::Reduction::Amplify) => {
+                self.amplify_y();
+            }
+            Some(protocol::Reduction::Uncover) => {
+                self.uncover_y();
+            }
+        }
+        (None, None, Some(self))
+    }
 }
 
 impl Strategy for Combine {
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
-        // FIXME: implement me
-        Ok(None)
+        if self.are_singularities_outside_domain() {
+            if let Ok(reduction) = self.reduction_egest() {
+                return Ok(reduction);
+            }
+        }
+        match self.reduction_ingest() {
+            (_, _, Some(myself)) => myself.egest(),
+            (_, Some(homographic), _) => Err(Box::new(homographic)),
+            (Some(ratio), _, _) => Err(Box::new(ratio)),
+            _ => panic!("logic error"),
+        }
     }
 }
