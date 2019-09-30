@@ -36,7 +36,12 @@ fn test_compare() {
                     }
                     assert_eq!(
                         Number::compare(Number::ratio(n1, d1), Number::ratio(n2, d2)),
-                        reference_compare(n1, d1, n2, d2)
+                        reference_compare(n1, d1, n2, d2),
+                        "error: comparison between ({} {}) and ({} {}) differs from reference",
+                        n1,
+                        d1,
+                        n2,
+                        d2
                     );
                 }
             }
@@ -63,16 +68,21 @@ fn compare_homographics() {
                             if rd == 0 {
                                 continue;
                             }
-                            println!(
-                                "{} {} {} {} ({} {}) = ({} {})",
-                                nx, n, dx, d, xn, xd, rn, rd
-                            );
                             assert_eq!(
                                 Number::compare(
                                     Number::homographic(Number::ratio(xn, xd), nx, n, dx, d),
                                     Number::ratio(rn, rd)
                                 ),
-                                Ordering::Equal
+                                Ordering::Equal,
+                                "error: {} {} {} {} ({} {}) is not ({} {})",
+                                nx,
+                                n,
+                                dx,
+                                d,
+                                xn,
+                                xd,
+                                rn,
+                                rd
                             );
                         }
                     }
@@ -84,14 +94,15 @@ fn compare_homographics() {
 
 #[test]
 fn compare_combines() {
-    for nxy in 0..2 {
-        for dxy in 0..2 {
-            for nx in 0..2 {
-                for dx in 0..2 {
-                    for ny in 0..2 {
-                        for dy in 0..2 {
-                            for n in 0..2 {
-                                for d in 0..2 {
+    let range = 2;
+    for nxy in -1..range + 1 {
+        for dxy in -1..range + 1 {
+            for nx in -1..range + 1 {
+                for dx in -1..range + 1 {
+                    for ny in -1..range + 1 {
+                        for dy in -1..range + 1 {
+                            for n in -1..range + 1 {
+                                for d in -1..range + 1 {
                                     compare_combine(nxy, nx, ny, n, dxy, dx, dy, d);
                                 }
                             }
@@ -154,10 +165,6 @@ fn compare_combine(
             if rd == 0 {
                 continue;
             }
-            println!(
-                "{} {} {} {}  {} {} {} {}  ({} {})  ({} {})  =  ({} {})",
-                nxy, nx, ny, n, dxy, dx, dy, d, *xn, *xd, *yn, *yd, rn, rd
-            );
             assert_eq!(
                 Number::compare(
                     Number::combine(
@@ -174,7 +181,22 @@ fn compare_combine(
                     ),
                     Number::ratio(rn, rd)
                 ),
-                Ordering::Equal
+                Ordering::Equal,
+                "error: {} {} {} {}  {} {} {} {}  ({} {})  ({} {}) is not ({} {})",
+                nxy,
+                nx,
+                ny,
+                n,
+                dxy,
+                dx,
+                dy,
+                d,
+                *xn,
+                *xd,
+                *yn,
+                *yd,
+                rn,
+                rd
             );
         }
     }
