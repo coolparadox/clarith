@@ -710,21 +710,6 @@ pub fn new(
     Homographic::new(x_clog, nx, n, dx, d)
 }
 
-pub fn new_clog(
-    x: Clog,
-    nx: isize,
-    n: isize,
-    dx: isize,
-    d: isize,
-) -> (
-    Option<protocol::Special>,
-    Option<protocol::Primer>,
-    Option<Ratio>,
-    Option<Homographic>,
-) {
-    new(Number::Other(None, x), nx, n, dx, d)
-}
-
 impl Homographic {
     fn new(
         x: Clog,

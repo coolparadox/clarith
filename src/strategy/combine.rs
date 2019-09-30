@@ -1209,18 +1209,34 @@ impl Combine {
         self.d = self.d.checked_sub(self.h).unwrap();
     }
 
+    fn simple_clog() -> Rc<Clog> {
+        let (_, _, ratio) = ratio::new_i(1, 2);
+        Rc::new(Clog {
+            strategy: Box::new(ratio.unwrap()),
+        })
+    }
+
+    fn promote_clog(clog: Rc<Clog>) -> Number {
+        Number::Other(None, Rc::try_unwrap(clog).ok().unwrap())
+    }
+
+    fn shutdown_x(&mut self) -> Number {
+        let moved = Rc::clone(&self.x);
+        self.x = Combine::simple_clog();
+        Combine::promote_clog(moved)
+    }
+
+    fn shutdown_y(&mut self) -> Number {
+        let moved = Rc::clone(&self.y);
+        self.y = Combine::simple_clog();
+        Combine::promote_clog(moved)
+    }
+
     fn reduction_ingest(&mut self) -> (Option<Ratio>, Option<Homographic>) {
         match Rc::get_mut(&mut self.x).unwrap().egest() {
             None => {
                 let (ny, n, dy, d) = self.value_at_end_of_x();
-
-                let y = Rc::clone(&self.y);
-                let (_, _, ratio) = ratio::new_i(1, 2);
-                self.y = Rc::new(Clog {
-                    strategy: Box::new(ratio.unwrap()),
-                });
-
-                match homographic::new_clog(Rc::try_unwrap(y).ok().unwrap(), ny, n, dy, d) {
+                match homographic::new(self.shutdown_y(), ny, n, dy, d) {
                     (None, None, ratio, homographic) => {
                         return (ratio, homographic);
                     }
@@ -1239,14 +1255,7 @@ impl Combine {
         match Rc::get_mut(&mut self.y).unwrap().egest() {
             None => {
                 let (nx, n, dx, d) = self.value_at_end_of_y();
-
-                let x = Rc::clone(&self.x);
-                let (_, _, ratio) = ratio::new_i(1, 2);
-                self.x = Rc::new(Clog {
-                    strategy: Box::new(ratio.unwrap()),
-                });
-
-                match homographic::new_clog(Rc::try_unwrap(x).ok().unwrap(), nx, n, dx, d) {
+                match homographic::new(self.shutdown_x(), nx, n, dx, d) {
                     (None, None, ratio, homographic) => {
                         return (ratio, homographic);
                     }
