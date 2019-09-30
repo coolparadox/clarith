@@ -1220,7 +1220,7 @@ impl Combine {
                     strategy: Box::new(ratio.unwrap()),
                 });
 
-                match homographic::new_clog(y, ny, n, dy, d) {
+                match homographic::new_clog(Rc::try_unwrap(y).ok().unwrap(), ny, n, dy, d) {
                     (None, None, ratio, homographic) => {
                         return (ratio, homographic);
                     }
@@ -1246,7 +1246,7 @@ impl Combine {
                     strategy: Box::new(ratio.unwrap()),
                 });
 
-                match homographic::new_clog(x, nx, n, dx, d) {
+                match homographic::new_clog(Rc::try_unwrap(x).ok().unwrap(), nx, n, dx, d) {
                     (None, None, ratio, homographic) => {
                         return (ratio, homographic);
                     }
