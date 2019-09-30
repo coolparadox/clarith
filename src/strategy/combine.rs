@@ -21,12 +21,14 @@
 use crate::protocol;
 use crate::strategy::homographic;
 use crate::strategy::homographic::Homographic;
+use crate::strategy::ratio;
 use crate::strategy::ratio::Ratio;
 use crate::strategy::support;
 use crate::strategy::Strategy;
 use crate::Clog;
 use crate::Number;
 use std::mem::swap;
+use std::rc::Rc;
 
 #[cfg(test)]
 mod tests {
@@ -591,11 +593,33 @@ mod tests {
         assert!(t(2, 1, 2, 1, 0, 1));
     }
 
+    #[test]
+    fn egest0() {
+        assert_eq!(
+            Number::compare(
+                Number::combine(
+                    Number::ratio(-2, 3),
+                    Number::ratio(2, 3),
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    1
+                ),
+                Number::ratio(3, 5)
+            ),
+            Ordering::Equal
+        );
+    }
+
 }
 
 pub struct Combine {
-    x: Clog,
-    y: Clog,
+    x: Rc<Clog>,
+    y: Rc<Clog>,
     a: isize,
     b: isize,
     c: isize,
@@ -799,14 +823,14 @@ pub fn new(
             None => {}
         }
 
-        Combine::new(x_clog, y_clog, a, b, c, d, e, f, g, h)
+        Combine::new(Rc::new(x_clog), Rc::new(y_clog), a, b, c, d, e, f, g, h)
     }
 }
 
 impl Combine {
     fn new(
-        x: Clog,
-        y: Clog,
+        x: Rc<Clog>,
+        y: Rc<Clog>,
         a: isize,
         b: isize,
         c: isize,
@@ -909,10 +933,16 @@ impl Combine {
         ),
         Combine,
     > {
-        match self.x.egest() {
+        match Rc::get_mut(&mut self.x).unwrap().egest() {
             None => {
                 let (ny, n, dy, d) = self.value_at_end_of_x();
-                return Ok(homographic::new(Number::Other(None, self.y), ny, n, dy, d));
+                return Ok(homographic::new(
+                    Number::Other(None, Rc::try_unwrap(self.y).ok().unwrap()),
+                    ny,
+                    n,
+                    dy,
+                    d,
+                ));
             }
             Some(protocol::Reduction::Amplify) => {
                 self.amplify_x();
@@ -921,10 +951,16 @@ impl Combine {
                 self.uncover_x();
             }
         }
-        match self.y.egest() {
+        match Rc::get_mut(&mut self.y).unwrap().egest() {
             None => {
                 let (nx, n, dx, d) = self.value_at_end_of_y();
-                return Ok(homographic::new(Number::Other(None, self.x), nx, n, dx, d));
+                return Ok(homographic::new(
+                    Number::Other(None, Rc::try_unwrap(self.x).ok().unwrap()),
+                    nx,
+                    n,
+                    dx,
+                    d,
+                ));
             }
             Some(protocol::Reduction::Amplify) => {
                 self.amplify_y();
@@ -1173,13 +1209,20 @@ impl Combine {
         self.d = self.d.checked_sub(self.h).unwrap();
     }
 
-    fn reduction_ingest(mut self) -> (Option<Ratio>, Option<Homographic>, Option<Combine>) {
-        match self.x.egest() {
+    fn reduction_ingest(&mut self) -> (Option<Ratio>, Option<Homographic>) {
+        match Rc::get_mut(&mut self.x).unwrap().egest() {
             None => {
                 let (ny, n, dy, d) = self.value_at_end_of_x();
-                match homographic::new(Number::Other(None, self.y), ny, n, dy, d) {
+
+                let y = Rc::clone(&self.y);
+                let (_, _, ratio) = ratio::new_i(1, 2);
+                self.y = Rc::new(Clog {
+                    strategy: Box::new(ratio.unwrap()),
+                });
+
+                match homographic::new_clog(y, ny, n, dy, d) {
                     (None, None, ratio, homographic) => {
-                        return (ratio, homographic, None);
+                        return (ratio, homographic);
                     }
                     _ => {
                         panic!("logic error");
@@ -1193,12 +1236,19 @@ impl Combine {
                 self.uncover_x();
             }
         }
-        match self.y.egest() {
+        match Rc::get_mut(&mut self.y).unwrap().egest() {
             None => {
                 let (nx, n, dx, d) = self.value_at_end_of_y();
-                match homographic::new(Number::Other(None, self.x), nx, n, dx, d) {
+
+                let x = Rc::clone(&self.x);
+                let (_, _, ratio) = ratio::new_i(1, 2);
+                self.x = Rc::new(Clog {
+                    strategy: Box::new(ratio.unwrap()),
+                });
+
+                match homographic::new_clog(x, nx, n, dx, d) {
                     (None, None, ratio, homographic) => {
-                        return (ratio, homographic, None);
+                        return (ratio, homographic);
                     }
                     _ => {
                         panic!("logic error");
@@ -1212,7 +1262,7 @@ impl Combine {
                 self.uncover_y();
             }
         }
-        (None, None, Some(self))
+        (None, None)
     }
 }
 
@@ -1224,10 +1274,9 @@ impl Strategy for Combine {
             }
         }
         match self.reduction_ingest() {
-            (_, _, Some(myself)) => myself.egest(),
-            (_, Some(homographic), _) => Err(Box::new(homographic)),
-            (Some(ratio), _, _) => Err(Box::new(ratio)),
-            _ => panic!("logic error"),
+            (_, Some(homographic)) => Err(Box::new(homographic)),
+            (Some(ratio), _) => Err(Box::new(ratio)),
+            _ => self.egest(),
         }
     }
 }

@@ -26,6 +26,7 @@ use crate::strategy::Strategy;
 use crate::Clog;
 use crate::Number;
 use std::mem::swap;
+use std::rc::Rc;
 
 #[cfg(test)]
 mod tests {
@@ -641,7 +642,7 @@ mod tests {
 }
 
 pub struct Homographic {
-    x: Clog,
+    x: Rc<Clog>,
     nx: isize,
     n: isize,
     dx: isize,
@@ -707,12 +708,33 @@ pub fn new(
         }
         None => {}
     }
-    Homographic::new(x_clog, nx, n, dx, d)
+    Homographic::new(Rc::new(x_clog), nx, n, dx, d)
+}
+
+pub fn new_clog(
+    x: Rc<Clog>,
+    nx: isize,
+    n: isize,
+    dx: isize,
+    d: isize,
+) -> (
+    Option<protocol::Special>,
+    Option<protocol::Primer>,
+    Option<Ratio>,
+    Option<Homographic>,
+) {
+    new(
+        Number::Other(None, Rc::try_unwrap(x).ok().unwrap()),
+        nx,
+        n,
+        dx,
+        d,
+    )
 }
 
 impl Homographic {
     fn new(
-        x: Clog,
+        x: Rc<Clog>,
         nx: isize,
         n: isize,
         dx: isize,
@@ -733,7 +755,7 @@ impl Homographic {
         Option<protocol::Primer>,
         Option<Ratio>,
     )> {
-        match self.x.egest() {
+        match Rc::get_mut(&mut self.x).unwrap().egest() {
             None => {
                 let (num, den) = self.value_at_one_half();
                 Some(ratio::new_i(num, den))
@@ -851,7 +873,7 @@ impl Homographic {
     }
 
     fn reduction_ingest(&mut self) -> Option<Ratio> {
-        match self.x.egest() {
+        match Rc::get_mut(&mut self.x).unwrap().egest() {
             None => {
                 let (num, den) = self.value_at_one_half();
                 match ratio::new_i(num, den) {
