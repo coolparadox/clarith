@@ -614,7 +614,6 @@ mod tests {
             Ordering::Equal
         );
     }
-
 }
 
 pub struct Combine {
@@ -986,10 +985,10 @@ impl Combine {
             )
         } else {
             (
-                self.a.checked_add(self.c * 2).unwrap(),
-                self.b.checked_add(self.d * 2).unwrap(),
-                self.e.checked_add(self.g * 2).unwrap(),
-                self.f.checked_add(self.h * 2).unwrap(),
+                self.a.checked_add(self.c.checked_mul(2).unwrap()).unwrap(),
+                self.b.checked_add(self.d.checked_mul(2).unwrap()).unwrap(),
+                self.e.checked_add(self.g.checked_mul(2).unwrap()).unwrap(),
+                self.f.checked_add(self.h.checked_mul(2).unwrap()).unwrap(),
             )
         }
     }
@@ -1008,10 +1007,10 @@ impl Combine {
             )
         } else {
             (
-                self.a.checked_add(self.b * 2).unwrap(),
-                self.c.checked_add(self.d * 2).unwrap(),
-                self.e.checked_add(self.f * 2).unwrap(),
-                self.g.checked_add(self.h * 2).unwrap(),
+                self.a.checked_add(self.b.checked_mul(2).unwrap()).unwrap(),
+                self.c.checked_add(self.d.checked_mul(2).unwrap()).unwrap(),
+                self.e.checked_add(self.f.checked_mul(2).unwrap()).unwrap(),
+                self.g.checked_add(self.h.checked_mul(2).unwrap()).unwrap(),
             )
         }
     }

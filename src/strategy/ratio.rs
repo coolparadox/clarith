@@ -180,7 +180,6 @@ mod tests {
         }
         panic!();
     }
-
 }
 
 pub struct Ratio {

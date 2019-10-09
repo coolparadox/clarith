@@ -241,7 +241,6 @@ mod tests {
         assert_eq!(compare(two(), one()), Ordering::Greater);
         assert_eq!(compare(two(), two()), Ordering::Equal);
     }
-
 }
 
 pub fn compare(n1: Number, n2: Number) -> Ordering {

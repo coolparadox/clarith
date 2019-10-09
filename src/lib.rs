@@ -156,4 +156,9 @@ impl Number {
             )
         }
     }
+
+    pub fn consume(x: Number) -> (Option<Number>, isize, isize, isize, isize) {
+        let (co, nx, n, dx, d) = strategy::consume::new(x);
+        (co.map(|c| Number::Other(None, c)), nx, n, dx, d)
+    }
 }

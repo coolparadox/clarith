@@ -636,8 +636,197 @@ mod tests {
         h(neg_one_half());
     }
 
-    // FIXME: overflow tests
+    fn consume(x: Number) {
+        let (_, mut c) = x.unwrap_other();
+        loop {
+            match c.egest() {
+                None => {
+                    break;
+                }
+                _ => {}
+            }
+        }
+    }
 
+    #[test]
+    fn unity_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            1,
+            0,
+            0,
+            1,
+        ));
+    }
+
+    #[test]
+    fn unity_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            1,
+            0,
+            0,
+            1,
+        ));
+    }
+
+    #[test]
+    fn mul_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            2,
+            0,
+            0,
+            1,
+        ));
+    }
+
+    #[test]
+    fn mul_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            2,
+            0,
+            0,
+            1,
+        ));
+    }
+
+    #[test]
+    fn div_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            1,
+            0,
+            0,
+            2,
+        ));
+    }
+
+    #[test]
+    fn div_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            1,
+            0,
+            0,
+            2,
+        ));
+    }
+
+    #[test]
+    fn rec_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            0,
+            1,
+            1,
+            0,
+        ));
+    }
+
+    #[test]
+    fn rec_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            0,
+            1,
+            1,
+            0,
+        ));
+    }
+
+    #[test]
+    #[ignore] // FIXME: issue #2
+    fn add_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            1,
+            1,
+            0,
+            1,
+        ));
+    }
+
+    #[test]
+    fn add_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            1,
+            1,
+            0,
+            1,
+        ));
+    }
+
+    #[test]
+    #[ignore] // FIXME: issue #2
+    fn rec_add_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            0,
+            1,
+            1,
+            1,
+        ));
+    }
+
+    #[test]
+    fn rec_add_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            0,
+            1,
+            1,
+            1,
+        ));
+    }
+
+    #[test]
+    fn incr_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            1,
+            1,
+            1,
+            0,
+        ));
+    }
+
+    #[test]
+    #[ignore] // FIXME: issue #2
+    fn incr_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            1,
+            1,
+            1,
+            0,
+        ));
+    }
+
+    #[test]
+    fn rec_incr_does_not_overflow1() {
+        consume(Number::homographic(
+            Number::ratio(isize::max_value(), 1),
+            1,
+            0,
+            1,
+            1,
+        ));
+    }
+
+    #[test]
+    #[ignore] // FIXME: issue #2
+    fn rec_incr_does_not_overflow2() {
+        consume(Number::homographic(
+            Number::ratio(1, isize::max_value()),
+            1,
+            0,
+            1,
+            1,
+        ));
+    }
 }
 
 pub struct Homographic {
@@ -751,15 +940,24 @@ impl Homographic {
 
     fn primer_egest(&mut self) -> Result<Option<protocol::Primer>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
-        if support::less_than_minus_one(nmax, dmax) {
+        if nmin == 0 && dmin == 0 {
+            Err(0)
+        } else if support::are_same(nmin, dmin, nmax, dmax) && support::is_special(nmin, dmin) {
+            Err(0)
+        } else if !support::greater_than_minus_one(nmax, dmax) {
+            // max <= -1
             Ok(Some(self.ground()))
-        } else if support::greater_than_minus_one(nmin, dmin) && support::less_than_zero(nmax, dmax)
-        {
-            Ok(Some(self.reflect()))
-        } else if support::greater_than_zero(nmin, dmin) && support::less_than_one(nmax, dmax) {
-            Ok(None)
-        } else if support::greater_than_one(nmin, dmin) {
+        } else if !support::less_than_one(nmin, dmin) {
+            // min >= 1
             Ok(Some(self.turn()))
+        } else if !support::less_than_minus_one(nmin, dmin)
+            && !support::greater_than_zero(nmax, dmax)
+        {
+            // min >= -1 && max <= 0
+            Ok(Some(self.reflect()))
+        } else if !support::less_than_zero(nmin, dmin) && !support::greater_than_one(nmax, dmax) {
+            // min >= 0 && max <= 1
+            Ok(None)
         } else {
             Err(0)
         }
@@ -787,7 +985,13 @@ impl Homographic {
 
     fn image_extremes(&self) -> (isize, isize, isize, isize) {
         let (n0, d0) = self.value_at_zero();
+        if n0 == 0 && d0 == 0 {
+            return (0, 0, 0, 0);
+        }
         let (n1, d1) = self.value_at_one();
+        if n1 == 0 && d1 == 0 {
+            return (0, 0, 0, 0);
+        }
         support::updated_range(n0, d0, n0, d0, n1, d1)
     }
 
@@ -797,7 +1001,9 @@ impl Homographic {
 
     fn is_domain_amenable(mx: isize, m: isize) -> bool {
         let s = m.signum();
-        s != 0 && s == mx.checked_add(m).unwrap().signum()
+        s == 0
+            || s == mx.checked_add(m).unwrap().signum()
+            || mx.checked_add(m).unwrap().signum() == 0
     }
 
     fn is_pole_outside_domain(&self) -> bool {
@@ -878,6 +1084,8 @@ impl Homographic {
         Option<Ratio>,
         Option<Homographic>,
     ) {
+        // FIXME: debug
+        println!("{} {} {} {}", self.nx, self.n, self.dx, self.d);
         if self.are_singularities_outside_domain() {
             if let Ok(primer) = self.primer_egest() {
                 return (None, primer, None, Some(self));
@@ -885,22 +1093,22 @@ impl Homographic {
         }
         match self.prime_ingest() {
             Some((special, primer, ratio)) => (special, primer, ratio, None),
+            // FIXME: recursion
             None => self.prime(),
         }
     }
 
     fn reduction_egest(&mut self) -> Result<Option<protocol::Reduction>, isize> {
         let (nmin, dmin, nmax, dmax) = self.image_extremes();
-        // FIXME: remove sanity checks?
-        if support::not_greater_than_zero(nmin, dmin) {
+        if support::less_than_zero(nmin, dmin) {
             panic!("logic error");
-        }
-        if support::not_less_than_one(nmax, dmax) {
+        } else if support::greater_than_one(nmax, dmax) {
             panic!("logic error");
-        }
-        if support::less_than_one_half(nmax, dmax) {
+        } else if support::equal_to_one_half(nmin, dmin) && support::equal_to_one_half(nmax, dmax) {
+            Ok(None)
+        } else if !support::greater_than_one_half(nmax, dmax) {
             Ok(Some(self.amplify()))
-        } else if support::greater_than_one_half(nmin, dmin) {
+        } else if !support::less_than_one_half(nmin, dmin) {
             Ok(Some(self.uncover()))
         } else {
             Err(0)
@@ -929,6 +1137,8 @@ impl Homographic {
 
 impl Strategy for Homographic {
     fn egest(&mut self) -> Result<Option<protocol::Reduction>, Box<dyn Strategy>> {
+        // FIXME: debug
+        println!("{} {} {} {}", self.nx, self.n, self.dx, self.d);
         if self.are_singularities_outside_domain() {
             if let Ok(reduction) = self.reduction_egest() {
                 return Ok(reduction);
@@ -936,6 +1146,7 @@ impl Strategy for Homographic {
         }
         match self.reduction_ingest() {
             Some(ratio) => Err(Box::new(ratio)),
+            // FIXME: recursion
             None => self.egest(),
         }
     }

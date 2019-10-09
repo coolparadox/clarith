@@ -19,6 +19,7 @@
  */
 
 pub mod combine;
+pub mod consume;
 pub mod homographic;
 pub mod ratio;
 mod support;

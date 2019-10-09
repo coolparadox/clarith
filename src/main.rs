@@ -11,6 +11,18 @@ fn main() {
         logn(Number::ratio(n * 10 + 5, 10));
         println!("");
     }
+
+    print!("{}: ", isize::max_value());
+    logn(Number::ratio(isize::max_value(), 1));
+    println!("");
+
+    print!("1/{}: ", isize::max_value());
+    logn(Number::ratio(1, isize::max_value()));
+    println!("");
+
+    print!("-2: ");
+    logn(Number::ratio(-2, 1));
+    println!("");
 }
 
 fn logn(x: Number) {
@@ -59,6 +71,7 @@ fn logc(mut c: Clog) {
     loop {
         match c.egest() {
             None => {
+                print!("H");
                 break;
             }
             Some(r) => {
