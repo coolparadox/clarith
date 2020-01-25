@@ -35,7 +35,7 @@ script:
 after_success:
   # upload the documentation from the build with stable (automatically only actually
   # runs on the master branch, not individual PRs)
-  # - travis-cargo --only stable doc-upload
+  - travis-cargo --only stable doc-upload
   # measure code coverage and upload to coveralls.io (the verify
   # argument mitigates kcov crashes due to malformed debuginfo, at the
   # cost of some speed <https://github.com/huonw/travis-cargo/issues/12>)
@@ -47,4 +47,4 @@ env:
     # - TRAVIS_CARGO_NIGHTLY_FEATURE=nightly
     - TRAVIS_CARGO_NIGHTLY_FEATURE=''
     # encrypted github token for doc upload (see `GH_TOKEN` link above)
-    - secure: "..."
+    - secure: $GITHUB_API_KEY
