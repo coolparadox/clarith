@@ -18,6 +18,14 @@
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
+//! # Continued Logarithm Arithmetic
+//!
+//! `clarith` provides primitives for basic arithmetic
+//! with numbers expressed in a continued logarithm representation.
+//!
+//! Continued logarithm is a way of representing rational numbers with unbounded precision.
+//! Reference: <https://perl.plover.com/classes/cftalk/INFO/gosper.txt>
+
 mod compare;
 mod strategy;
 
@@ -32,10 +40,10 @@ pub struct Clog {
 }
 
 impl Clog {
-    /** Destructively extract information from a Clog instance.
-       This method modifies self to another number with less embedded continued logarithm information.
-       Returns the next continued logarithm component extracted from self, or None if self is one half.
-    **/
+    /**
+     * Destructively extract the next Reduction symbol from self.
+     * If self is one half, no symbol is returned.
+     */
     pub fn egest(&mut self) -> Option<protocol::Reduction> {
         match self.strategy.egest() {
             Ok(reduction) => reduction,
@@ -47,13 +55,14 @@ impl Clog {
     }
 }
 
-/// An unbounded number with unbounded precision.
+/// A finite unbounded number with unbounded precision.
 pub enum Number {
     Special(protocol::Special),
     Other(Option<protocol::Primer>, Clog),
 }
 
 impl Number {
+    /// Unwraps the Special content from self, or panic.
     pub fn unwrap_special(self) -> protocol::Special {
         match self {
             Number::Special(special) => special,
@@ -61,6 +70,7 @@ impl Number {
         }
     }
 
+    /// Unwraps the Other content from self, or panic.
     pub fn unwrap_other(self) -> (Option<protocol::Primer>, Clog) {
         match self {
             Number::Other(primer, clog) => (primer, clog),
@@ -96,6 +106,9 @@ impl Number {
         )
     }
 
+    /**
+     * Construct the Number _(nx * x + n) / (dx * x + d)_
+     */
     pub fn homographic(x: Number, nx: isize, n: isize, dx: isize, d: isize) -> Number {
         let (special, primer, ratio, homographic) = strategy::homographic::new(x, nx, n, dx, d);
         if let Some(fixed) = special {
@@ -117,6 +130,9 @@ impl Number {
         }
     }
 
+    /**
+     * Construct the Number _(nxy * x * y + nx * x + ny * y + n) / (dxy * x * y + dx * x + dy * y + d)_
+     */
     pub fn combine(
         x: Number,
         y: Number,
@@ -157,6 +173,19 @@ impl Number {
         }
     }
 
+    /**
+     * Transfer information from a Number to a homograhic transformation.
+     *
+     * This funtion returns:
+     *  - A Number _y_
+     *  - Coefficients _ny_, _n_, _dy_, _d_
+     *
+     *  such that _(ny * y + n) / (dy * y + d)_ equals to the input _x_.
+     *  
+     *  The information extraction from the input _x_ proceeds until one of the following conditions is met:
+     *   - The input reaches one half. (In this case _y_ is returned None.)
+     *   - The returned coefficients are about to overflow.
+     */
     pub fn consume(x: Number) -> (Option<Number>, isize, isize, isize, isize) {
         let (co, nx, n, dx, d) = strategy::consume::new(x);
         (co.map(|c| Number::Other(None, c)), nx, n, dx, d)

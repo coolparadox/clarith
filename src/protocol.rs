@@ -51,7 +51,7 @@ pub enum Reduction {
 
 /**
  * The Primer enum defines transformations that can be applied to values represented by Reduction
- * messages, expanding the domain of values that can be represented.
+ * messages, expanding the domain of represented values.
  * By optionally prepending a Primer to a sequence of Reduction symbols,
  * any finite value (with a few exceptions given by the Special enum) can be represented.
  *
