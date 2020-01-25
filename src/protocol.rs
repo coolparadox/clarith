@@ -27,8 +27,8 @@
  */
 
 /**
- * The Reduction enum defines the symbols that allow any number greater than zero, lesser than
- * one and not equal to one half to be represented in a continued logarithm format.
+ * The Reduction enum defines the symbols that allow any number greater than zero
+ * and lesser than one to be represented in a continued logarithm format.
  *
  * There is a one-to-one relationship between any value of this domain and the sequence of Reduction
  * symbols that represent it.
@@ -36,10 +36,10 @@
  *  (TODO: link to a formal proof).
  *
  * Examples:
- *  - 0.5 = (the empty sequence)
- *  - 0.1 = AAAUA
- *  - 0.567 = UUAUUUUUUUAAAAUA
- *  - 0.888888... = UAA
+ *  - 0.5 = '' (the empty sequence)
+ *  - 0.1 = 'AAAUA'
+ *  - 0.567 = 'UUAUUUUUUUAAAAUA'
+ *  - 0.888888... = 'UAA'
  */
 #[derive(Debug, PartialEq)]
 pub enum Reduction {
@@ -56,9 +56,9 @@ pub enum Reduction {
  * any finite value (with a few exceptions given by the Special enum) can be represented.
  *
  * Examples:
- *  - -0.5 = R
- *  - 5 = TAAUA
- *  - -3.14 = GAUUUAUUUAAUUUU
+ *  - -0.5 = 'R'
+ *  - 5 = 'TAAUA'
+ *  - -3.14 = 'GAUUUAUUUAAUUUU'
  */
 #[derive(Debug, PartialEq)]
 pub enum Primer {
