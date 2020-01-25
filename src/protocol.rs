@@ -18,33 +18,67 @@
  * along with clarith.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/// Basic components of a Clog value.
+/*!
+ * This module defines the required symbols for expressing unbounded, finite numeric values in a continued logarithm representation.
+ *
+ * The underlying symbols are given by the Reduction enum.
+ * The Primer enum expands the representation domain to the whole numeric axis.
+ * Finally, the Special enum covers the holes of the representation scheme.
+ */
+
+/**
+ * The Reduction enum defines the symbols that allow any number greater than zero, lesser than
+ * one and not equal to one half to be represented in a continued logarithm format.
+ *
+ * There is a one-to-one relationship between any value of this domain and the sequence of Reduction
+ * symbols that represent it.
+ *  Also, a Reduction sequence is finite if and only if the represented value is a rational number
+ *  (TODO: link to a formal proof).
+ *
+ * Examples:
+ *  - 0.5 = (the empty sequence)
+ *  - 0.1 = AAAUA
+ *  - 0.567 = UUAUUUUUUUAAAAUA
+ *  - 0.888888... = UAA
+ */
 #[derive(Debug, PartialEq)]
 pub enum Reduction {
-    /// Clog value was greater than zero and lesser than one half, and was doubled.
+    /// The value was greater than zero and lesser than one half, and was doubled.
     Amplify,
-    /// Clog value was greater than one half and lesser than one, was reciprocated and then had one subtracted from itself.
+    /// The value was greater than one half and lesser than one, was reciprocated and then had one subtracted from itself.
     Uncover,
 }
 
-/// Ways to increase the representation range of a Clog value.
+/**
+ * The Primer enum defines transformations that can be applied to values represented by Reduction
+ * messages, expanding the domain of values that can be represented.
+ * By optionally prepending a Primer to a sequence of Reduction symbols,
+ * any finite value (with a few exceptions given by the Special enum) can be represented.
+ *
+ * Examples:
+ *  - -0.5 = R
+ *  - 5 = TAAUA
+ *  - -3.14 = GAUUUAUUUAAUUUU
+ */
 #[derive(Debug, PartialEq)]
 pub enum Primer {
-    /// The associated Clog value must be reciprocated in order to represent the intended value.
+    /// The value was reciprocated.
     Turn,
-    /// The associated Clog value must be negated in order to represent the intended value.
+    /// The value was negated.
     Reflect,
-    /// The associated Clog value must be reciprocated and negated in order to represent the intended value.
+    /// The value was reciprocated and negated.
     Ground,
 }
 
-/// Values that cannot be uniquely represented by the combination of a Primer and a Clog.
+/**
+ * Values that cannot be represented by the combination of an optional Primer and a Reduction sequence.
+ */
 #[derive(Debug, PartialEq)]
 pub enum Special {
-    /// Minus one
+    /// The value is minus one.
     NegOne,
-    /// Zero
+    /// The value is zero.
     Zero,
-    /// One
+    /// The value is one.
     PosOne,
 }

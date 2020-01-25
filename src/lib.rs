@@ -21,7 +21,6 @@
 mod compare;
 mod strategy;
 
-/// Building elements of numbers.
 pub mod protocol;
 
 use crate::strategy::Strategy;
@@ -33,9 +32,10 @@ pub struct Clog {
 }
 
 impl Clog {
-    /// Destructively extract information from a Clog instance.
-    /// This method modifies self to another number with less embedded continued logarithm information.
-    /// Returns the next continued logarithm component extracted from self, or None if self is one half.
+    /** Destructively extract information from a Clog instance.
+       This method modifies self to another number with less embedded continued logarithm information.
+       Returns the next continued logarithm component extracted from self, or None if self is one half.
+    **/
     pub fn egest(&mut self) -> Option<protocol::Reduction> {
         match self.strategy.egest() {
             Ok(reduction) => reduction,
