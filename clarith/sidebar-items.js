@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Number","A finite unbounded number with unbounded precision."]],"mod":[["protocol","This module defines the required symbols for expressing unbounded, finite numeric values in a continued logarithm representation."]],"struct":[["Clog","A number greater than zero and lesser than one with unbounded precision."]]});
