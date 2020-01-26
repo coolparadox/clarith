@@ -5,6 +5,3 @@
 
 `clarith` is a Rust crate that provides primitives for basic arithmetic
 with numbers expressed in a continued logarithm representation.
-
-[Continued logarithm](https://perl.plover.com/classes/cftalk/INFO/gosper.txt) is a way of representing rational numbers with unbounded precision.
-
